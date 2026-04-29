@@ -1,0 +1,49 @@
+name: skincare_v02
+description: "Skin Analysis System and Initial Consultation Based on Weather and Location Data."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Styling
+  google_fonts: ^6.1.0        # لدعم خطوط Cairo و Tajawal
+  flutter_svg: ^2.0.9         # للتعامل مع أيقونات وصور SVG
+  cached_network_image: ^3.3.1 # لتحميل الصور من النت وتخزينها مؤقتاً
+
+  # State Management & Routing
+  flutter_riverpod: ^2.4.9    # الأفضل والآمن لإدارة الحالة
+  go_router: ^13.0.1          # التنقل بين الشاشات باحترافية
+
+  # Hardware & Permissions
+  camera: ^0.10.5+9           # فتح الكاميرا والتقاط صور البشرة
+  geolocator: ^10.1.0         # تحديد الموقع GPS
+  permission_handler: ^11.2.0 # طلب صلاحيات (الكاميرا، الموقع) من المستخدم
+
+  # Networking
+  dio: ^5.4.0                 # الأفضل للاتصال بـ FastAPI ورفع الصور
+  shared_preferences: ^2.2.2  # تخزين بيانات المستخدم الأولية محلياً (Token)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets Definition
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # Fonts Definition (Offline fallback if needed, though google_fonts handles this)
+  # fonts:
+  #   - family: Cairo
+  #     fonts:
+  #       - asset: assets/fonts/Cairo-Regular.ttf
+  #       - asset: assets/fonts/Cairo-Bold.ttf
