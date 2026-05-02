@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../skin_analysis/screens/camera_screen.dart';
@@ -50,14 +50,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(32.0),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.7), // Surface container lowest / 70%
+                            color: Colors.white.withValues(alpha: 0.7), // Surface container lowest / 70%
                             borderRadius: BorderRadius.circular(32),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF70585B).withOpacity(0.05),
+                                color: const Color(0xFF70585B).withValues(alpha: 0.05),
                                 blurRadius: 32,
                                 offset: const Offset(0, 8),
                               ),
@@ -316,7 +316,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderRadius: BorderRadius.circular(50),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFB6C1).withOpacity(0.39),
+            color: const Color(0xFFFFB6C1).withValues(alpha: 0.39),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -400,7 +400,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.3)),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.3)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
         child: Container(color: Colors.transparent),

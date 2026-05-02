@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
@@ -39,7 +39,7 @@ class AnalysisResultScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(color: Colors.white),
                       boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
@@ -141,7 +141,7 @@ class AnalysisResultScreen extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: AppBar(
-            backgroundColor: Colors.white.withOpacity(0.6),
+            backgroundColor: Colors.white.withValues(alpha: 0.6),
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: AppTheme.greenGlow),
@@ -155,13 +155,13 @@ class AnalysisResultScreen extends StatelessWidget {
                   ),
             ),
             centerTitle: true,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Colors.white,
-                  backgroundImage: const CachedNetworkImageProvider(
+      actions: const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.white,
+            backgroundImage: CachedNetworkImageProvider(
                     "https://lh3.googleusercontent.com/aida-public/AB6AXuB5bfCjPjtLaL55XCDV3b0hs9o8xvr5DdFpVprtdVvoW378-FGhJvmp_9B65S2g2Jr7FSS_HxTJOvMt7cvLVxCWPiH1_gKOZyrOO8qw98q-1hRqOnJIk6wPD2ni7x9EFrqVQaWjQihu5yCB5poOeJu1REUw_2BXY3cYsUTYqcd44tcZyz1Q1uWIrR76s7dCME9ZHuvISt2rg3KDxkLVA8rxtjN3M0Mg44QqptedQ4-5bo5Ss1fDcDhCBIOZoqPCxZF5vehbbu0M1-I",
                   ),
                 ),
@@ -183,9 +183,9 @@ class AnalysisResultScreen extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.9)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
             boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 30)],
           ),
           child: child,
@@ -202,7 +202,7 @@ class AnalysisResultScreen extends StatelessWidget {
         Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.2), shape: BoxShape.circle),
           child: Icon(icon, color: Colors.black87, size: 20),
         ),
         const SizedBox(width: 12),
@@ -267,8 +267,8 @@ class AnalysisResultScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(50),
-            gradient: LinearGradient(colors: [AppTheme.pinkGlow.withOpacity(0.2), AppTheme.greenGlow.withOpacity(0.2)]),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
+            gradient: LinearGradient(colors: [AppTheme.pinkGlow.withValues(alpha: 0.2), AppTheme.greenGlow.withValues(alpha: 0.2)]),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
           ),
           child: const Text("التهاب الجلد التماسي (محتمل)", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
         ),
@@ -334,9 +334,9 @@ class AnalysisResultScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.8)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +382,7 @@ class AnalysisResultScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(16),
             border: const Border(right: BorderSide(color: AppTheme.pinkGlow, width: 4)),
           ),
@@ -429,13 +429,13 @@ class AnalysisResultScreen extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: AppTheme.greenGlow.withOpacity(0.3), blurRadius: 40)],
+                  boxShadow: [BoxShadow(color: AppTheme.greenGlow.withValues(alpha: 0.3), blurRadius: 40)],
                 ),
               ),
               CircularProgressIndicator(
                 value: 0.85,
                 strokeWidth: 8,
-                backgroundColor: Colors.black.withOpacity(0.05),
+                backgroundColor: Colors.black.withValues(alpha: 0.05),
                 valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.greenGlow),
               ),
               Center(
@@ -469,7 +469,7 @@ class AnalysisResultScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
-        boxShadow: [BoxShadow(color: AppTheme.pinkGlow.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: AppTheme.pinkGlow.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
         gradient: const LinearGradient(colors: [AppTheme.pinkGlow, AppTheme.greenGlow]),
       ),
       child: Material(
@@ -501,7 +501,7 @@ class AnalysisResultScreen extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.3)),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.3)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
         child: Container(color: Colors.transparent),

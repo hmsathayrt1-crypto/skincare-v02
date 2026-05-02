@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:skincare_v02/features/auth/screens/login_screen.dart';
@@ -112,7 +112,7 @@ class WelcomeScreen extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           shadows: [
                             Shadow(
-                              color: AppTheme.greenGlow.withOpacity(0.5),
+                              color: AppTheme.greenGlow.withValues(alpha: 0.5),
                               blurRadius: 4,
                             ),
                           ],
@@ -137,7 +137,7 @@ class WelcomeScreen extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.3),
+        color: color.withValues(alpha: 0.3),
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -154,7 +154,7 @@ class WelcomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(50),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.greenGlow.withOpacity(0.35),
+            color: AppTheme.greenGlow.withValues(alpha: 0.35),
             blurRadius: 25,
             offset: const Offset(0, 6),
           ),

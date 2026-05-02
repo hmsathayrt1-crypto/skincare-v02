@@ -1,8 +1,6 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/theme/app_theme.dart';
-
 // Enum جديد لتصنيف نوع النتيجة والتحكم بالألوان
 enum ScanTagType {
   normal,
@@ -50,9 +48,8 @@ class HistoryScreen extends StatelessWidget {
         return {'bg': const Color(0x33FF9800), 'border': const Color(0xFFFF9800)};
       case ScanTagType.combo:
         return {'bg': const Color(0x332196F3), 'border': const Color(0xFF2196F3)};
-      case ScanTagType.normal:
-      default:
-        return {'bg': const Color(0x33FFEB3B), 'border': const Color(0xFFFFEB3B)};
+  case ScanTagType.normal:
+      return {'bg': const Color(0x33FFEB3B), 'border': const Color(0xFFFFEB3B)};
     }
   }
 
@@ -121,7 +118,7 @@ class HistoryScreen extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white.withOpacity(0.75),
+      backgroundColor: Colors.white.withValues(alpha: 0.75),
       elevation: 0,
       centerTitle: false,
       leading: const SizedBox.shrink(), // لإخفاء زر الرجوع الافتراضي
@@ -179,7 +176,7 @@ class HistoryScreen extends StatelessWidget {
       child: TextButton(
         onPressed: () {},
         style: TextButton.styleFrom(
-          backgroundColor: isActive ? Colors.white : (colors != null ? colors['bg'] : Colors.white.withOpacity(0.6)),
+          backgroundColor: isActive ? Colors.white : (colors != null ? colors['bg'] : Colors.white.withValues(alpha: 0.6)),
           foregroundColor: Colors.black,
           shape: const StadiumBorder(),
           side: BorderSide(color: isActive ? Colors.black45 : (colors != null ? colors['border']! : Colors.transparent)),
@@ -236,7 +233,7 @@ class HistoryScreen extends StatelessWidget {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: dotColor, width: 2),
-                    boxShadow: [BoxShadow(color: dotColor.withOpacity(0.9), blurRadius: 12)],
+                    boxShadow: [BoxShadow(color: dotColor.withValues(alpha: 0.9), blurRadius: 12)],
                   ),
                 ),
               ],
@@ -259,9 +256,9 @@ class HistoryScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.8)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +288,7 @@ class HistoryScreen extends StatelessWidget {
                             Container( // حاوية لإضافة التوهج للأيقونة
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: iconColor.withOpacity(0.6), blurRadius: 8)],
+                                boxShadow: [BoxShadow(color: iconColor.withValues(alpha: 0.6), blurRadius: 8)],
                               ),
                               child: Icon(result.icon, size: 18, color: iconColor),
                             ),
@@ -327,7 +324,7 @@ class HistoryScreen extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
-          colors: [color.withOpacity(0.4), Colors.transparent],
+          colors: [color.withValues(alpha: 0.4), Colors.transparent],
           stops: const [0.0, 0.7],
         ),
       ),

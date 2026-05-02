@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
@@ -45,15 +45,15 @@ class ChatScreen extends StatelessWidget {
                   children: [
                     _buildDateDivider("اليوم"),
                     const SizedBox(height: 24),
-                    _AiMessage(text: "مرحباً! أنا مساعدك الذكي للعناية بالبشرة. بناءً على تحليلك الأخير، يبدو أن بشرتك تميل إلى الجفاف اليوم. كيف تشعرين بها؟"),
-                    const SizedBox(height: 24),
-                    _UserMessage(text: "نعم، أشعر ببعض الشد في منطقة الخدين بعد الاستيقاظ."),
-                    const SizedBox(height: 24),
-                    _AiMessageWithButtons(
-                      text: "هذا طبيعي جداً في مثل هذا الطقس. أوصي بزيادة الترطيب في روتينك الصباحي. هل ترغبين في رؤية بعض التوصيات لمنتجات الترطيب العميق؟",
-                    ),
-                    const SizedBox(height: 24),
-                    _UserImageMessage(
+        const _AiMessage(text: "مرحباً! أنا مساعدك الذكي للعناية بالبشرة. بناءً على تحليلك الأخير، يبدو أن بشرتك تميل إلى الجفاف اليوم. كيف تشعرين بها؟"),
+        const SizedBox(height: 24),
+        const _UserMessage(text: "نعم، أشعر ببعض الشد في منطقة الخدين بعد الاستيقاظ."),
+        const SizedBox(height: 24),
+        const _AiMessageWithButtons(
+          text: "هذا طبيعي جداً في مثل هذا الطقس. أوصي بزيادة الترطيب في روتينك الصباحي. هل ترغبين في رؤية بعض التوصيات لمنتجات الترطيب العميق؟",
+        ),
+        const SizedBox(height: 24),
+        const _UserImageMessage(
                       imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuALkKj3rTq2C_GY0bc7pVF0cFLLbVKieoBZQo8Js0ydncB15MpbaHz0YLgwKl5poZndCZVmruJR2slWubLvqiRjFLwqu6YgysE0TByquBmCf3uHQiAH8ipHYteAoDdKlRLjDoMHlbux0ogdZZJV5zVO5Q-NnoVrKmWkkdSjpPhX9cVW5MZdyV9Q6JefWwkMPPNXOkpZ9Ug8foVdIerUx03iqIVtX8DiIlxbP-DQ_xvau5KfBwfou5dXec5bSskyE9ljQUz1D5nMjio",
                     ),
                   ],
@@ -81,7 +81,7 @@ class ChatScreen extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: AppBar(
-            backgroundColor: Colors.white.withOpacity(0.7),
+            backgroundColor: Colors.white.withValues(alpha: 0.7),
             elevation: 0,
             leadingWidth: 0,
             title: Row(
@@ -112,7 +112,7 @@ class ChatScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text("مساعد البشرة الذكي", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text("متصل الآن", style: TextStyle(color: Colors.black.withOpacity(0.7), fontSize: 13, fontWeight: FontWeight.w600)),
+                    Text("متصل الآن", style: TextStyle(color: Colors.black.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ],
@@ -131,7 +131,7 @@ class ChatScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFFEAE7E7).withOpacity(0.5), // surface-container-high/50
+          color: const Color(0xFFEAE7E7).withValues(alpha: 0.5), // surface-container-high/50
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black54)),
@@ -144,7 +144,7 @@ class ChatScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.background.withOpacity(0.0), AppTheme.background],
+          colors: [AppTheme.background.withValues(alpha: 0.0), AppTheme.background],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -156,9 +156,9 @@ class ChatScreen extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(50),
-              border: Border.all(color: Colors.white.withOpacity(0.5)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [

@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white.withOpacity(0.7),
+      backgroundColor: Colors.white.withValues(alpha: 0.7),
       elevation: 0,
       centerTitle: true,
       leading: IconButton(onPressed: () {}, icon: const Icon(Icons.menu, color: Colors.black)),
@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         const Text("سارة أحمد", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
-        Text("sara.ahmed@example.com", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black.withOpacity(0.7))),
+        Text("sara.ahmed@example.com", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black.withValues(alpha: 0.7))),
       ],
     );
   }
@@ -112,10 +112,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.8)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 40, offset: const Offset(0, 12))],
+            border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 40, offset: const Offset(0, 12))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,10 +147,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           initialValue: value,
           textDirection: isLtr ? TextDirection.ltr : TextDirection.rtl,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
-          decoration: InputDecoration(
-            border: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.black26)),
+          decoration: const InputDecoration(
+            border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black26)),
             focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.pinkGlow, width: 2)),
-            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            contentPadding: EdgeInsets.symmetric(vertical: 8),
           ),
         ),
       ],
@@ -163,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       const SizedBox(height: 8),
       Text(
         "يساعدنا تحديد نوع بشرتك في تقديم توصيات أدق لمنتجات العناية.",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black.withOpacity(0.8)),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black.withValues(alpha: 0.8)),
       ),
       const SizedBox(height: 16),
       Wrap(

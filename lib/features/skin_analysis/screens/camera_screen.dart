@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
@@ -98,8 +98,8 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
-                      border: Border.all(color: Colors.white.withOpacity(0.4)),
+                      color: Colors.white.withValues(alpha: 0.7),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     child: const Text(
@@ -133,7 +133,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: AppBar(
-            backgroundColor: Colors.white.withOpacity(0.7),
+            backgroundColor: Colors.white.withValues(alpha: 0.7),
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
@@ -176,8 +176,8 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
-            border: Border.all(color: Colors.white.withOpacity(0.4)),
+            color: Colors.white.withValues(alpha: 0.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
             borderRadius: BorderRadius.circular(50),
             boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 32, offset: Offset(0, 8))],
           ),
@@ -237,11 +237,11 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                   height: 3,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.transparent, AppTheme.greenGlow.withOpacity(0.9), Colors.transparent],
+                      colors: [Colors.transparent, AppTheme.greenGlow.withValues(alpha: 0.9), Colors.transparent],
                     ),
-                    boxShadow: [
-                      BoxShadow(color: AppTheme.greenGlow, blurRadius: 15, spreadRadius: 2),
-                    ],
+                boxShadow: const [
+                  BoxShadow(color: AppTheme.greenGlow, blurRadius: 15, spreadRadius: 2),
+                ],
                   ),
                 ),
               );
@@ -308,7 +308,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [BoxShadow(color: AppTheme.pinkGlow.withOpacity(0.5), blurRadius: 40)],
+              boxShadow: [BoxShadow(color: AppTheme.pinkGlow.withValues(alpha: 0.5), blurRadius: 40)],
             ),
             child: Container(
               decoration: const BoxDecoration(
@@ -321,8 +321,8 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                   height: 56,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                    color: Colors.white.withValues(alpha: 0.2),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
                   ),
                 ),
               ),
@@ -344,7 +344,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
         child: Container(
           width: size,
           height: size,
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
           child: Icon(icon, color: Colors.black, size: 24),
         ),
       ),
@@ -360,7 +360,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
         child: Container(
           height: 80,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             border: Border(top: BorderSide(color: Colors.grey.shade200)),
           ),
           child: Row(
@@ -412,14 +412,14 @@ GestureDetector(
       children: [
         Icon(
           icon,
-          color: Colors.black.withOpacity(isActive ? 1.0 : 0.6),
+          color: Colors.black.withValues(alpha: isActive ? 1.0 : 0.6),
           size: isActive ? 28 : 24,
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            color: Colors.black.withOpacity(isActive ? 1.0 : 0.6),
+            color: Colors.black.withValues(alpha: isActive ? 1.0 : 0.6),
             fontSize: 11,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
