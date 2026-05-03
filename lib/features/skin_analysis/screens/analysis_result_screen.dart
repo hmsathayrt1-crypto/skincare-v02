@@ -1,6 +1,7 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 
 class AnalysisResultScreen extends StatelessWidget {
@@ -145,7 +146,13 @@ class AnalysisResultScreen extends StatelessWidget {
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: AppTheme.greenGlow),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/camera');
+                }
+              },
             ),
             title: Text(
               "Dermalyze",
@@ -476,7 +483,11 @@ class AnalysisResultScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
-          onTap: () {},
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('سيتم ربطك بخبير مختص قريباً')),
+            );
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 48.0),
             child: Row(

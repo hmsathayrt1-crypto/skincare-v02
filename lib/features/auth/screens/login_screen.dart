@@ -1,8 +1,7 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'register_screen.dart'; // أضف هذا السطر في الأعلى
-import '../../skin_analysis/screens/camera_screen.dart';
+import 'package:go_router/go_router.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -47,7 +46,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: IconButton(
                         icon: const Icon(Icons.arrow_forward_ios, color: Colors.black),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
                       ),
                     ),
                     
@@ -90,7 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('سيتم تفعيل استعادة كلمة المرور قريباً')),
+                            );
+                          },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                           minimumSize: Size.zero,
@@ -127,12 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                        TextButton(
                           onPressed: () {
                             // الانتقال لشاشة إنشاء الحساب
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterScreen(),
-                              ),
-                            );
+                            context.push('/register');
                           },
                           child: Text(
                             "إنشاء حساب",
@@ -227,13 +231,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
           onTap: () {
-  Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const CameraScreen()),
-              (route) => false,
-            );
-
             // تنفيذ تسجيل الدخول
+            context.go('/camera');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),

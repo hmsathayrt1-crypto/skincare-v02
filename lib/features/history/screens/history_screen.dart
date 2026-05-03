@@ -106,7 +106,7 @@ class HistoryScreen extends StatelessWidget {
           ListView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             children: [
-              _buildFilterPills(),
+              _buildFilterPills(context),
               const SizedBox(height: 24),
               _buildTimeline(results),
             ],
@@ -141,7 +141,11 @@ class HistoryScreen extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('خيارات التصفية والفرز')),
+            );
+          },
           icon: const Icon(Icons.tune, color: Colors.black),
         ),
       ],
@@ -154,27 +158,33 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterPills() {
+  Widget _buildFilterPills(BuildContext context) {
     return SizedBox(
       height: 40,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          _buildPill("الكل", isActive: true),
-          _buildPill("بشرة دهنية", tagType: ScanTagType.oily),
-          _buildPill("بشرة جافة", tagType: ScanTagType.dry),
-          _buildPill("بشرة مختلطة", tagType: ScanTagType.combo),
+          _buildPill(context, "الكل", isActive: true),
+          _buildPill(context, "بشرة دهنية", tagType: ScanTagType.oily),
+          _buildPill(context, "بشرة جافة", tagType: ScanTagType.dry),
+          _buildPill(context, "بشرة مختلطة", tagType: ScanTagType.combo),
         ],
       ),
     );
   }
 
-  Widget _buildPill(String text, {bool isActive = false, ScanTagType? tagType}) {
+  Widget _buildPill(BuildContext context, String text, {bool isActive = false, ScanTagType? tagType}) {
     final colors = tagType != null ? _getTagColors(tagType) : null;
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
       child: TextButton(
-        onPressed: () {},
+        onPressed: () {
+          if (!isActive) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('تصفية: $text')),
+            );
+          }
+        },
         style: TextButton.styleFrom(
           backgroundColor: isActive ? Colors.white : (colors != null ? colors['bg'] : Colors.white.withValues(alpha: 0.6)),
           foregroundColor: Colors.black,

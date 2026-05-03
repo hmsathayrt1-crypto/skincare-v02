@@ -1,7 +1,7 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:skincare_v02/features/auth/screens/login_screen.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -95,12 +95,7 @@ class WelcomeScreen extends StatelessWidget {
                     TextButton(
                       onPressed: () {
                         // كود الانتقال إلى شاشة تسجيل الدخول
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        );
+                        context.push('/login');
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFF384C35),
@@ -171,6 +166,7 @@ class WelcomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(50),
           onTap: () {
             // الانتقال لشاشة الكاميرا لاحقاً
+            context.go('/camera');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),

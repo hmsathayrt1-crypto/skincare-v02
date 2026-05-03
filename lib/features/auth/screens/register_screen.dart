@@ -1,7 +1,7 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../skin_analysis/screens/camera_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -179,7 +179,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pop(context), // العودة للشاشة السابقة
+                          onPressed: () {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/login');
+                            }
+                          },
                           child: Text(
                             "سجل دخولك",
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -332,13 +338,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
           onTap: () {
-
-
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const CameraScreen()),
-              (route) => false,
-            );
+            context.go('/camera');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -374,7 +374,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // أزرار التسجيل الاجتماعي
   Widget _buildSocialButton({required IconData icon, required Color iconColor, required String label, double iconSize = 24}) {
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('سيتم تفعيل التسجيل الاجتماعي قريباً')),
+        );
+      },
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
         backgroundColor: Colors.white,

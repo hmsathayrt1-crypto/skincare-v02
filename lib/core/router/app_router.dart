@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/main_layout.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
@@ -15,6 +16,7 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   debugLogDiagnostics: true,
   routes: [
+    // ===== مسارات ما قبل تسجيل الدخول (بدون شريط تنقل) =====
     GoRoute(
       path: '/',
       name: 'welcome',
@@ -30,30 +32,61 @@ final GoRouter appRouter = GoRouter(
       name: 'register',
       builder: (context, state) => const RegisterScreen(),
     ),
-    GoRoute(
-      path: '/camera',
-      name: 'camera',
-      builder: (context, state) => const CameraScreen(),
-    ),
+
+    // ===== شاشة نتيجة التحليل (تابعة للفحص لكن تظهر كصفحة منفصلة) =====
     GoRoute(
       path: '/analysis',
       name: 'analysis',
       builder: (context, state) => const AnalysisResultScreen(),
     ),
-    GoRoute(
-      path: '/chat',
-      name: 'chat',
-      builder: (context, state) => const ChatScreen(),
-    ),
-    GoRoute(
-      path: '/history',
-      name: 'history',
-      builder: (context, state) => const HistoryScreen(),
-    ),
-    GoRoute(
-      path: '/profile',
-      name: 'profile',
-      builder: (context, state) => const ProfileScreen(),
+
+    // ===== المسارات الرئيسية (داخل شريط التنقل الثابت) =====
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainLayout(navigationShell: navigationShell);
+      },
+      branches: [
+        // الفرع 0: المحادثة الذكية
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/chat',
+              name: 'chat',
+              builder: (context, state) => const ChatScreen(),
+            ),
+          ],
+        ),
+        // الفرع 1: الفحص بالكاميرا
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/camera',
+              name: 'camera',
+              builder: (context, state) => const CameraScreen(),
+            ),
+          ],
+        ),
+        // الفرع 2: سجل النتائج
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/history',
+              name: 'history',
+              builder: (context, state) => const HistoryScreen(),
+            ),
+          ],
+        ),
+        // الفرع 3: الملف الشخصي
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              name: 'profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

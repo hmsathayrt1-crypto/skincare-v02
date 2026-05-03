@@ -67,7 +67,7 @@ class ChatScreen extends StatelessWidget {
             bottom: 0,
             left: 0,
             right: 0,
-            child: _buildInputBar(),
+            child: _buildInputBar(context),
           ),
         ],
       ),
@@ -118,7 +118,14 @@ class ChatScreen extends StatelessWidget {
               ],
             ),
             actions: [
-              IconButton(onPressed: () {}, icon: const Icon(Icons.more_horiz, color: Colors.black)),
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('خيارات إضافية')),
+                  );
+                },
+                icon: const Icon(Icons.more_horiz, color: Colors.black),
+              ),
             ],
           ),
         ),
@@ -139,7 +146,7 @@ class ChatScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInputBar() {
+  Widget _buildInputBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       decoration: BoxDecoration(
@@ -162,7 +169,14 @@ class ChatScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.add_photo_alternate_outlined, color: Colors.black54)),
+                IconButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('رفع صورة')),
+                    );
+                  },
+                  icon: const Icon(Icons.add_photo_alternate_outlined, color: Colors.black54),
+                ),
                 const Expanded(
                   child: TextField(
                     decoration: InputDecoration.collapsed(
@@ -172,7 +186,14 @@ class ChatScreen extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 ),
-                IconButton(onPressed: () {}, icon: const Icon(Icons.mic_none, color: Colors.black54)),
+                IconButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('الإدخال الصوتي')),
+                    );
+                  },
+                  icon: const Icon(Icons.mic_none, color: Colors.black54),
+                ),
                 Container(
                   width: 40,
                   height: 40,
@@ -181,7 +202,14 @@ class ChatScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: LinearGradient(colors: [AppTheme.pinkGlow, AppTheme.greenGlow]),
                   ),
-                  child: IconButton(onPressed: () {}, icon: const Icon(Icons.send, color: Colors.black, size: 20)),
+                  child: IconButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('إرسال')),
+                      );
+                    },
+                    icon: const Icon(Icons.send, color: Colors.black, size: 20),
+                  ),
                 ),
               ],
             ),
@@ -288,7 +316,11 @@ class _AiMessageWithButtons extends StatelessWidget {
           child: Row(
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('سيتم عرض التوصيات قريباً')),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0x334F644B), // secondary/20
                   elevation: 0,
@@ -298,7 +330,11 @@ class _AiMessageWithButtons extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               OutlinedButton(
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم التخطي')),
+                  );
+                },
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.black26),
                   shape: const StadiumBorder(),

@@ -59,14 +59,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white.withValues(alpha: 0.7),
       elevation: 0,
       centerTitle: true,
-      leading: IconButton(onPressed: () {}, icon: const Icon(Icons.menu, color: Colors.black)),
+      leading: IconButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('القائمة الجانبية')),
+          );
+        },
+        icon: const Icon(Icons.menu, color: Colors.black),
+      ),
       title: const Text("الملف الشخصي", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
       actions: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: IconButton(
             icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('الإعدادات')),
+              );
+            },
           ),
         ),
       ],
@@ -220,7 +231,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
-          onTap: () {},
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تم حفظ التغييرات بنجاح')),
+            );
+          },
           child: const Padding(
             padding: EdgeInsets.symmetric(vertical: 16.0),
             child: Center(

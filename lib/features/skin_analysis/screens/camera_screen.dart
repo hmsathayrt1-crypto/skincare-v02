@@ -1,14 +1,9 @@
 ﻿import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:camera/camera.dart';
 import '../../../core/theme/app_theme.dart';
-import 'analysis_result_screen.dart';
-// سننشئ هذا المجلد والملف في الخطوة التالية
-import '../../ai_chat/screens/chat_screen.dart';
-// سننشئ هذا المجلد والملف في الخطوة التالية
-import '../../history/screens/history_screen.dart';
-// سننشئ هذا المجلد والملف في الخطوة التالية
-import '../../profile/screens/profile_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../services/camera_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -17,49 +12,83 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _scanAnimationController;
-  late Animation<double> _scanAnimation;
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+  final CameraService _cameraService = CameraService();
+  bool _isCameraReady = false;
+  bool _isFlashOn = false;
+  bool _isFrontCamera = false;
 
   @override
   void initState() {
     super.initState();
-    // إعداد حركة خط المسح (يتحرك للأعلى والأسفل كل ثانيتين)
-    _scanAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _scanAnimationController, curve: Curves.easeInOut),
-    );
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
   }
 
   @override
   void dispose() {
-    _scanAnimationController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraService.dispose();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) {
+      _cameraService.dispose();
+    } else if (state == AppLifecycleState.resumed && !_cameraService.isInitialized) {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    final success = await _cameraService.initializeCamera();
+    if (mounted) {
+      setState(() {
+        _isCameraReady = success;
+      });
+    }
+  }
+
+  Future<void> _toggleFlash() async {
+    await _cameraService.toggleFlash();
+    if (mounted) {
+      setState(() {
+        _isFlashOn = !_isFlashOn;
+      });
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    await _cameraService.switchCamera();
+    if (mounted) {
+      setState(() {
+        _isFrontCamera = !_isFrontCamera;
+      });
+    }
+  }
+
+  Future<void> _capturePhoto() async {
+    final photo = await _cameraService.takePhoto();
+    if (photo != null && mounted) {
+      context.push('/analysis');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Scaffold مع extendBody لكي تمتد الكاميرا خلف الـ AppBar و الـ BottomNavigationBar
     return Scaffold(
-      extendBody: true,
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.black, // خلفية سوداء للكاميرا
+      backgroundColor: Colors.black,
       appBar: _buildGlassAppBar(),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. خلفية الكاميرا (حالياً صورة، لاحقاً سنضع CameraPreview هنا)
-          Opacity(
-            opacity: 0.85,
-            child: CachedNetworkImage(
-              imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCG6FYHYKenv-rKK_z5XHLvMUPWj90ShWxwWv74-zSiI_7sRjmUVXIS3SLHNV_fB9G5UrEX6DBaeq-_lkbPZscJAdgGJhWY41UjJ7P_8VcE6lDtAqcPU9MzX_O2lErk_amVUebUtdGSFTs9PtnUwC9fwEzZM8uX6xKYQ3FZbVbuVAS8oxfdsb7y6aDU2_RLps2gVihufrjA0ibWBTBYddTo6dB256GBudNCWWG60ciMAovX44V8JAAyuSORxhDQQWvTNLq4XLVG_DQ",
-              fit: BoxFit.cover,
-            ),
-          ),
+          // 1. معاينة الكاميرا الحقيقية أو شاشة انتظار
+          if (_isCameraReady && _cameraService.controller != null)
+            CameraPreview(_cameraService.controller!)
+          else
+            _buildCameraPlaceholder(),
 
           // 2. تدرج التعتيم (Vignette)
           Container(
@@ -74,7 +103,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
 
           // 3. شريط البيانات البيئية (الطقس والموقع)
           Positioned(
-            top: 100, // أسفل الـ AppBar
+            top: 100,
             left: 24,
             right: 24,
             child: _buildEnvironmentalData(),
@@ -114,18 +143,36 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
 
           // 6. أزرار التحكم بالكاميرا
           Positioned(
-            bottom: 100,
+            bottom: 60,
             left: 0,
             right: 0,
             child: _buildCameraControls(),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  // الـ AppBar الزجاجي
+  // شاشة بديلة عند تحميل الكاميرا أو فشلها
+  Widget _buildCameraPlaceholder() {
+    return Container(
+      color: Colors.black,
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.camera_alt, color: Colors.white38, size: 64),
+            SizedBox(height: 16),
+            Text(
+              "جاري تشغيل الكاميرا...",
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   PreferredSizeWidget _buildGlassAppBar() {
     return PreferredSize(
       preferredSize: const Size.fromHeight(64),
@@ -138,7 +185,11 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
             centerTitle: true,
             leading: IconButton(
               icon: const Icon(Icons.menu, color: Colors.black),
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('القائمة الجانبية')),
+                );
+              },
             ),
             title: const Text(
               "تحليل البشرة",
@@ -153,11 +204,8 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.grey.shade300, width: 2),
-                    image: const DecorationImage(
-                      image: CachedNetworkImageProvider("https://lh3.googleusercontent.com/aida-public/AB6AXuBFN6qyi6NPQm5vmu_onj1pPJNIeXCLcH6wy-HEBeH207vQ2J67-x3zyTmJ-L-_lRSllwUTZL8sXeNjJiFT5zZfVC77nTeRclIXQRi9FAFAgKhZYJEWD_mZX_Fkr-GqLkQoRv84tl_AOELGlBgTGSIWfIgDsED9OefDze-MG4EMfZwj41icR4O9bvbyB3G8pQ4lBH06JOxpvnGhPSBSzC7xUZ2qU11quhOGM9ipoYhX3mRYmpQefx6_ntjGkzokYD9Yd9id5jPkgnY"),
-                      fit: BoxFit.cover,
-                    ),
                   ),
+                  child: const Icon(Icons.person, color: Colors.grey, size: 24),
                 ),
               ),
             ],
@@ -167,7 +215,6 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
     );
   }
 
-  // شريط البيانات البيئية
   Widget _buildEnvironmentalData() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(50),
@@ -191,7 +238,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
               _buildDataPoint(Icons.light_mode, "UV: 6"),
               Container(width: 1, height: 20, color: Colors.black45),
               const Text(
-                "34.05,-118", // اختصار لتناسب الشاشة
+                "34.05,-118",
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 11),
                 textDirection: TextDirection.ltr,
               ),
@@ -212,25 +259,24 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
     );
   }
 
-  // المربع المضيء في المنتصف وخط المسح
   Widget _buildScanningFrame() {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.75,
-      height: MediaQuery.of(context).size.width * 1.0, // نسبة 3/4 تقريباً
+      height: MediaQuery.of(context).size.width * 1.0,
       child: Stack(
         children: [
-          // الزوايا المضيئة
           _buildCorner(Alignment.topLeft),
           _buildCorner(Alignment.topRight),
           _buildCorner(Alignment.bottomLeft),
           _buildCorner(Alignment.bottomRight),
 
           // خط المسح المتحرك
-          AnimatedBuilder(
-            animation: _scanAnimation,
-            builder: (context, child) {
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(seconds: 2),
+            builder: (context, value, child) {
               return Positioned(
-                top: _scanAnimation.value * (MediaQuery.of(context).size.width * 1.0 - 4),
+                top: value * (MediaQuery.of(context).size.width * 1.0 - 4),
                 left: 0,
                 right: 0,
                 child: Container(
@@ -239,9 +285,9 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                     gradient: LinearGradient(
                       colors: [Colors.transparent, AppTheme.greenGlow.withValues(alpha: 0.9), Colors.transparent],
                     ),
-                boxShadow: const [
-                  BoxShadow(color: AppTheme.greenGlow, blurRadius: 15, spreadRadius: 2),
-                ],
+                    boxShadow: const [
+                      BoxShadow(color: AppTheme.greenGlow, blurRadius: 15, spreadRadius: 2),
+                    ],
                   ),
                 ),
               );
@@ -253,7 +299,6 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
   }
 
   Widget _buildCorner(Alignment alignment) {
-    // تحديد حواف المربع بناءً على الزاوية
     Border border;
     BorderRadius radius;
     const color = AppTheme.greenGlow;
@@ -283,32 +328,36 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
     );
   }
 
-  // أزرار التحكم في الكاميرا
   Widget _buildCameraControls() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // زر الفلاش
-        _buildGlassCircleButton(Icons.flash_off, 48),
-        const SizedBox(width: 32),
-        // زر الالتقاط الرئيسي
-      // زر الالتقاط الرئيسي
+        // زر الفلاش - فعال
         GestureDetector(
-          onTap: () {
-            // الانتقال لشاشة النتائج عند الضغط على زر التصوير
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AnalysisResultScreen()),
-            );
-          },
+          onTap: _isCameraReady ? _toggleFlash : null,
+          child: _buildGlassCircleButton(
+            _isFlashOn ? Icons.flash_on : Icons.flash_off,
+            48,
+          ),
+        ),
+        const SizedBox(width: 32),
+
+        // زر الالتقاط الرئيسي
+        GestureDetector(
+          onTap: _isCameraReady ? _capturePhoto : null,
           child: Container(
             width: 80,
             height: 80,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [BoxShadow(color: AppTheme.pinkGlow.withValues(alpha: 0.5), blurRadius: 40)],
+              border: Border.all(color: Colors.white.withValues(alpha: _isCameraReady ? 1.0 : 0.3), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.pinkGlow.withValues(alpha: _isCameraReady ? 0.5 : 0.0),
+                  blurRadius: 40,
+                ),
+              ],
             ),
             child: Container(
               decoration: const BoxDecoration(
@@ -330,8 +379,15 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
           ),
         ),
         const SizedBox(width: 32),
-        // زر تدوير الكاميرا
-        _buildGlassCircleButton(Icons.flip_camera_ios, 48),
+
+        // زر تدوير الكاميرا - فعال
+        GestureDetector(
+          onTap: _isCameraReady ? _switchCamera : null,
+          child: _buildGlassCircleButton(
+            Icons.flip_camera_ios,
+            48,
+          ),
+        ),
       ],
     );
   }
@@ -348,83 +404,6 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
           child: Icon(icon, color: Colors.black, size: 24),
         ),
       ),
-    );
-  }
-
-  // شريط التنقل السفلي (Bottom Navigation Bar)
-  Widget _buildBottomNavBar() {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-// استبدل أول عنصر _buildNavItem بهذا الكود
-GestureDetector(
-  onTap: () {
-    // الانتقال إلى شاشة المحادثة
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ChatScreen()),
-    );
-  },
-  child: _buildNavItem(Icons.smart_toy_outlined, "المحادثة الذكية", false),
-),
-              _buildNavItem(Icons.center_focus_strong, "الفحص", true),
-             // استبدل ثالث عنصر _buildNavItem بهذا الكود
-GestureDetector(
-  onTap: () {
-    // الانتقال إلى شاشة السجل
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const HistoryScreen()),
-    );
-  },
-  child: _buildNavItem(Icons.history, "السجل", false),
-),
-// استبدل آخر عنصر _buildNavItem بهذا الكود
-GestureDetector(
-  onTap: () {
-    // الانتقال إلى شاشة الملف الشخصي
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ProfileScreen()),
-    );
-  },
-  child: _buildNavItem(Icons.person_outline, "الملف الشخصي", false),
-),            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: Colors.black.withValues(alpha: isActive ? 1.0 : 0.6),
-          size: isActive ? 28 : 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.black.withValues(alpha: isActive ? 1.0 : 0.6),
-            fontSize: 11,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
     );
   }
 }
