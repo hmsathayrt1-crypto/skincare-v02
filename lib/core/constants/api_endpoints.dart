@@ -2,8 +2,10 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
+  static String serverIpPort = '127.0.0.1:80';
+
   /// الرابط الأساسي للخادم
-  static const String baseUrl = 'http://10.0.2.2/backend/api';
+  static String get baseUrl => 'http://$serverIpPort/backend/api';
 
   // === المصادقة ===
   static const String register = '/register.php';

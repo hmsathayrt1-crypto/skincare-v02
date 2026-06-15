@@ -6,6 +6,7 @@
 ## 📝 سجل التغييرات
 | التاريخ | التغيير | الملفات المتأثرة |
 |---------|---------|------------------|
+| 2026-06-15 | إضافة زر إعدادات الخادم العائم (Server Connection Floating Button) وتخزين سجل العناوين السابقة واختبار الاتصال بالخلفية | `lib/main.dart`, `lib/core/router/app_router.dart`, `lib/core/constants/api_endpoints.dart`, `lib/shared/server_config_floating_button.dart` |
 | 2026-06-15 | استرجاع الثيم الفاتح (ThemeMode.light) لتجربة الألوان الفاتحة | `lib/main.dart` |
 | 2026-06-15 | تصحيح استيرادات الحزمة وبناء نسخة APK بنجاح | `lib/main.dart`, `lib/core/services/auth_service.dart`, `lib/core/services/chat_service.dart`, `lib/core/services/scan_service.dart` |
 | 2026-05-03 | إنشاء ملفات التوثيق Agent.md و UserReport.md | `Agent.md`, `UserReport.md` |
@@ -14,12 +15,17 @@
 ## 🐛 المشاكل والحلول
 | المشكلة | الحالة | الحل |
 |---------|--------|------|
+| صعوبة اختبار التطبيق مع خوادم محلية مختلفة أو عناوين IP متغيرة | تم الحل | إضافة واجهة إعدادات عائمة ديناميكية تحفظ آخر عنوان وتتيح اختيار العناوين السابقة من قائمة تاريخ وتحديث عميل HTTP (Dio) فورياً |
 | أخطاء في واجهات التطبيق وعدم عمل التنقل بشكل صحيح | تم الحل | استبدال `Navigator.push` و `Navigator.pop` بـ `context.push` و `context.go` و `context.pop` ليتوافق مع إعدادات `app_router.dart` |
 | خطأ في تجميع التطبيق بسبب استيرادات حزمة باسم قديم `dermalyze` | تم الحل | استبدال جميع استيرادات `package:dermalyze/` بـ `package:skincare_v02/` في كامل ملفات المشروع |
+| توقف الباك إند عن الاستجابة لطلبات إنشاء الحساب والمصادقة | تم الحل | 1. تشغيل خادم MySQL الخاص بـ XAMPP.<br>2. إنشاء قاعدة البيانات `skincare_db` واستيراد الجداول والبيانات الأولية عبر سكربت `migrate_fresh_seed.php`.<br>3. تشغيل خادم PHP المحلي على المنفذ 80 لخدمة ملفات الباك إند. |
 
 ## 💻 أخطاء التيرمينال
 | الأمر | الخطأ | الحل |
 |-------|-------|------|
+| `flutter analyze` | `Undefined name '_serverIpPort'` | تم استبدال الاسم القديم بـ `serverIpPort` بعد حذف الـ getter والـ setter للتبسيط وتجنب تحذيرات التحليل |
 | `flutter analyze` | `The function 'MyApp' isn't defined` | تغيير `MyApp()` إلى `DermalyzeApp()` في ملف `test/widget_test.dart` لتطابق إعادة التسمية في `main.dart` |
 | `flutter build apk --release` | `Couldn't resolve the package 'dermalyze'` | استبدال الاستيرادات الخاطئة بالاسم الفعلي للحزمة `skincare_v02` |
+| `test_db.php` | `SQLSTATE[HY000] [2002] connection refused` | تشغيل خادم MySQL (`mysqld.exe`) من مسار XAMPP. |
+| `test_db.php` | `SQLSTATE[HY000] [1049] Unknown database 'skincare_db'` | تشغيل سكربت `migrate_fresh_seed.php` لإنشاء وهيكلة قاعدة البيانات. |
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,8 +13,11 @@ import '../../features/history/screens/history_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../core/models/scan_model.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 /// موجه التطبيق - تعريف جميع المسارات
 final GoRouter appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/',
   debugLogDiagnostics: true,
   redirect: (context, state) async {
