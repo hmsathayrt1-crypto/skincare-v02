@@ -314,7 +314,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       children: [
         // الخط الزمني بالألوان الجديدة
         Positioned(
-          right: 20,
+          left: 18,
           top: 0,
           bottom: 0,
           width: 2,
@@ -343,9 +343,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 90,
+            width: 36,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   margin: const EdgeInsets.only(top: 8),
@@ -361,6 +361,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(child: _buildResultCard(scan)),
         ],
       ),
@@ -460,24 +461,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             ],
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: tagColors['bg'],
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: tagColors['border']!),
-                        ),
-                        child: Text(
-                          scan.condition ?? 'غير معروف',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black),
-                        ),
                       ),
                     ),
                   ],

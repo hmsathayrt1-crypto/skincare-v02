@@ -186,11 +186,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: Colors.white.withValues(alpha: 0.7),
       elevation: 0,
       centerTitle: true,
-      leading: IconButton(
-        onPressed: () {
-          Scaffold.of(context).openDrawer();
-        },
-        icon: const Icon(Icons.menu, color: Colors.black),
+      // Builder لإعطاء context تحت الـ Scaffold حتى يعمل openDrawer
+      leading: Builder(
+        builder: (context) => IconButton(
+          onPressed: () => Scaffold.of(context).openDrawer(),
+          icon: const Icon(Icons.menu, color: Colors.black),
+        ),
       ),
       title: const Text("الملف الشخصي", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
       actions: [

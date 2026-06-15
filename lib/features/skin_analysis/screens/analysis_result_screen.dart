@@ -186,13 +186,16 @@ class AnalysisResultScreen extends ConsumerWidget {
                   ),
             ),
             centerTitle: true,
-            actions: const [
+            actions: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, color: Colors.grey, size: 22),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: GestureDetector(
+                  onTap: () => context.go('/profile'),
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, color: Colors.grey, size: 22),
+                  ),
                 ),
               ),
             ],
@@ -383,44 +386,28 @@ class AnalysisResultScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white, 
-                shape: BoxShape.circle, 
-                border: Border.all(color: Colors.white),
-              ),
-              child: const Icon(Icons.water_drop, color: AppTheme.greenGlow),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "توصيات العناية الفورية", 
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black),
-                  ),
-                  const SizedBox(height: 12),
-                  if (scanResult?.consultation != null && scanResult!.consultation!.isNotEmpty)
-                    Text(
-                      scanResult!.consultation!,
-                      style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
-                    )
-                  else ...[
-                    _buildListItem("التوقف عن استخدام أي منتجات تجميلية أو عطور على المنطقة المصابة."),
-                    _buildListItem("استخدام مرطب طبي خالي من العطور والمواد المهيجة مرتين يومياً."),
-                    _buildListItem("تجنب التعرض المباشر لأشعة الشمس واستخدم واقي شمس مناسب."),
-                  ],
-                ],
-              ),
-            ),
-          ],
+        // العنوان بعرض الشاشة الكامل بدون أيقونة جانبية
+        const Text(
+          "توصيات العناية الفورية",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black),
         ),
+        const SizedBox(height: 12),
+        if (scanResult?.consultation != null && scanResult!.consultation!.isNotEmpty)
+          Text(
+            scanResult!.consultation!,
+            textAlign: TextAlign.start,
+            style: const TextStyle(
+              fontWeight: FontWeight.normal, // Regular
+              fontSize: 14,
+              height: 1.7, // تباعد أسطر أوضح
+              color: Colors.black87,
+            ),
+          )
+        else ...[
+          _buildListItem("التوقف عن استخدام أي منتجات تجميلية أو عطور على المنطقة المصابة."),
+          _buildListItem("استخدام مرطب طبي خالي من العطور والمواد المهيجة مرتين يومياً."),
+          _buildListItem("تجنب التعرض المباشر لأشعة الشمس واستخدم واقي شمس مناسب."),
+        ],
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(16),
@@ -524,7 +511,7 @@ class AnalysisResultScreen extends ConsumerWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
           onTap: () {
-            context.push('/chat');
+            context.go('/chat');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 48.0),
