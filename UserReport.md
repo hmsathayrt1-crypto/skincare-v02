@@ -6,6 +6,7 @@
 ## 📝 سجل التغييرات
 | التاريخ | التغيير | الملفات المتأثرة |
 |---------|---------|------------------|
+| 2026-06-15 | نشر ودفع أحدث التعديلات والتحسينات في التخطيط والتنقل بنجاح إلى مستودع GitHub | `lib/features/history/screens/history_screen.dart`, `lib/features/profile/screens/profile_screen.dart`, `lib/features/skin_analysis/screens/analysis_result_screen.dart` |
 | 2026-06-15 | تحسين تخطيط العناصر وتفادي تجاوز النصوص (Text Overflow) في شاشة عرض السجل | `lib/features/history/screens/history_screen.dart` |
 | 2026-06-15 | سحب آخر تعديل من GitHub وحل تعارض دمج (Merge Conflict) بنجاح في شاشة نتائج التحليل | `lib/features/skin_analysis/screens/analysis_result_screen.dart` |
 | 2026-06-15 | رفع وتثبيت التعديلات البرمجية الأخيرة بنجاح على GitHub | جميع الملفات المعدلة و `.gitignore` |
