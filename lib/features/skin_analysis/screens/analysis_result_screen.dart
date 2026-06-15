@@ -19,7 +19,7 @@ class AnalysisResultScreen extends StatelessWidget {
       appBar: _buildGlassAppBar(context),
       body: Stack(
         children: [
-          // 1. التوهج الخلفي (Ambient Halos)
+          // 1. التوهج الخلفي (Ambient Glows)
           Positioned(
             top: -size.height * 0.1,
             right: -size.width * 0.1,
@@ -31,14 +31,15 @@ class AnalysisResultScreen extends StatelessWidget {
             child: _buildAmbientGlow(AppTheme.greenGlow, size.width * 0.6),
           ),
 
-          // 2. المحتوى الرئيسي
+          // 2. المحتوى الرئيسي القابل للتمرير
           SafeArea(
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // شارة التحقق
+                  // شارة التحقق بالذكاء الاصطناعي
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
@@ -64,7 +65,7 @@ class AnalysisResultScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // العناوين
+                  // العناوين التوضيحية
                   Text(
                     "تقرير فحص البشرة",
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
@@ -77,29 +78,27 @@ class AnalysisResultScreen extends StatelessWidget {
                   Text(
                     "تم تحليل الصورة المرفقة بنجاح. يرجى مراجعة النتائج أدناه، مع ملاحظة أن هذا التحليل لا يغني عن الاستشارة الطبية المتخصصة.",
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.black,
+                          color: Colors.black87,
                           fontWeight: FontWeight.w600,
                         ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
 
-                  // بطاقة الحالة المكتشفة
+                  // كرت الحالة والتشخيص المطور
                   _buildGlassCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSectionHeader(Icons.analytics, "الحالة المكتشفة", AppTheme.pinkGlow),
                         const SizedBox(height: 24),
-                        
-                        // الصورة والبيانات
                         _buildConditionDetails(context),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // بطاقة الاستشارة الطبية
+                  // كرت الاستشارة الطبية المبدئية
                   _buildGlassCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +111,7 @@ class AnalysisResultScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // بطاقة مستوى الثقة (نسبة الدقة)
+                  // كرت نسبة الثقة والدقة
                   _buildGlassCard(
                     child: Column(
                       children: [
@@ -124,8 +123,8 @@ class AnalysisResultScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // بطاقة معلومات الطقس
-                  if (scanResult?.temperature != null || scanResult?.humidity != null || scanResult?.cityName != null)
+                  // كرت معلومات الطقس والبيئة الخارجية
+                  if (scanResult?.temperature != null || scanResult?.humidity != null || scanResult?.cityName != null) ...[
                     _buildGlassCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,14 +135,14 @@ class AnalysisResultScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  if (scanResult?.temperature != null || scanResult?.humidity != null || scanResult?.cityName != null)
                     const SizedBox(height: 24),
+                  ],
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
 
-                  // زر استشارة خبير
+                  // زر الإجراء الرئيسي
                   _buildGradientButton(context),
-                  const SizedBox(height: 80), // مساحة للـ Bottom Navigation Bar
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -181,13 +180,13 @@ class AnalysisResultScreen extends StatelessWidget {
                   ),
             ),
             centerTitle: true,
-      actions: const [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.white,
-            backgroundImage: CachedNetworkImageProvider(
+            actions: const [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white,
+                  backgroundImage: CachedNetworkImageProvider(
                     "https://lh3.googleusercontent.com/aida-public/AB6AXuB5bfCjPjtLaL55XCDV3b0hs9o8xvr5DdFpVprtdVvoW378-FGhJvmp_9B65S2g2Jr7FSS_HxTJOvMt7cvLVxCWPiH1_gKOZyrOO8qw98q-1hRqOnJIk6wPD2ni7x9EFrqVQaWjQihu5yCB5poOeJu1REUw_2BXY3cYsUTYqcd44tcZyz1Q1uWIrR76s7dCME9ZHuvISt2rg3KDxkLVA8rxtjN3M0Mg44QqptedQ4-5bo5Ss1fDcDhCBIOZoqPCxZF5vehbbu0M1-I",
                   ),
                 ),
@@ -199,7 +198,7 @@ class AnalysisResultScreen extends StatelessWidget {
     );
   }
 
-  // حاوية البطاقة الزجاجية
+  // كرت زجاجي مرن
   Widget _buildGlassCard({required Widget child}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -220,7 +219,7 @@ class AnalysisResultScreen extends StatelessWidget {
     );
   }
 
-  // ترويسة الأقسام (أيقونة + نص)
+  // ترويسة الأقسام
   Widget _buildSectionHeader(IconData icon, String title, Color color, {bool center = false}) {
     final content = Row(
       mainAxisSize: MainAxisSize.min,
@@ -232,107 +231,132 @@ class AnalysisResultScreen extends StatelessWidget {
           child: Icon(icon, color: Colors.black87, size: 20),
         ),
         const SizedBox(width: 12),
-        Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.black)),
+        Text(
+          title, 
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+        ),
       ],
     );
     return center ? Center(child: content) : content;
   }
-// تفاصيل الحالة المكتشفة (الصورة والمقاييس)
+
+  // تفاصيل كرت النتيجة المعدل لتجنب المشاكل البصرية والـ Overflow
   Widget _buildConditionDetails(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // الصورة مع خط المسح الأخضر
-        Center(
-          child: Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white, width: 4),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        // 1. عرض التاريخ بوضوح في الأعلى
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "تاريخ التحليل",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
             ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-               ClipRRect(
-                 borderRadius: BorderRadius.circular(12),
-                  child: scanResult?.imagePath != null && scanResult!.imagePath.isNotEmpty
-                      ? Image.network(
-                          scanResult!.imagePath,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 40),
-                          ),
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.camera_alt, color: Colors.grey, size: 40),
-                        ),
-                ),
-                Positioned(
-                  top: 75,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 2,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.greenGlow,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.greenGlow, 
-                          blurRadius: 8, 
-                          spreadRadius: 2
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                // <-- الخطأ كان هنا: SizedBox كان داخل الـ Stack
-              ],
+            Text(
+              scanResult?.scanDate ?? "غير محدد",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
             ),
-          ),
-        ),
-        
-        const SizedBox(height: 24), // <-- تم نقل هذا السطر إلى هنا
-
-        // الوصف
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
-            gradient: LinearGradient(colors: [AppTheme.pinkGlow.withValues(alpha: 0.2), AppTheme.greenGlow.withValues(alpha: 0.2)]),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-          ),
-          child: Text(scanResult?.condition ?? "جاري التحليل...", style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
+          ],
         ),
         const SizedBox(height: 12),
-        Text(
-          scanResult?.consultation ?? "لم يتم تقديم استشارة بعد. يرجى إعادة التحليل.",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Colors.black),
+        const Divider(color: Colors.black12, height: 1),
+        const SizedBox(height: 16),
+
+        // 2. المحتوى الأفقي (الصورة + التفاصيل الجانبية)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // حاوية الصورة ذات أبعاد ثابتة مناسبة للكرت
+            Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: scanResult?.imagePath != null && scanResult!.imagePath.isNotEmpty
+                    ? Image.network(
+                        scanResult!.imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 30),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.camera_alt, color: Colors.grey, size: 30),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // التفاصيل النصية بجانب الصورة (مغلفة بـ Expanded لمنع حدوث الـ Overflow والتفاف الحروف بشكل خاطئ)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // التشخيص المكتشف
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: AppTheme.pinkGlow.withValues(alpha: 0.15),
+                      border: Border.all(color: AppTheme.pinkGlow.withValues(alpha: 0.1)),
+                    ),
+                    child: Text(
+                      scanResult?.condition ?? "جاري التحليل...",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        color: Colors.black,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // تفاصيل نوع البشرة ومستوى الدقة
+                  const Text(
+                    "نوع البشرة: حساسة / جافة",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "مستوى الدقة: ${((scanResult?.confidence ?? 0.0) * 100).toInt()}%",
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 24),
 
-        // مؤشرات الصحة
+        // 3. مؤشرات القياس الحيوية
         _buildProgressBar("مستوى الاحمرار", "متوسط", 0.65),
         const SizedBox(height: 16),
         _buildProgressBar("مستوى الجفاف", "مرتفع", 0.80),
         const SizedBox(height: 24),
 
-        // الشبكة السفلية
+        // 4. منطقة التشخيص
         Row(
           children: [
-            Expanded(child: _buildInfoBox("نوع البشرة", "حساسة / جافة")),
+            Expanded(child: _buildInfoBox("المنطقة الجغرافية", scanResult?.cityName ?? "الوجه")),
             const SizedBox(width: 16),
-            Expanded(child: _buildInfoBox("المنطقة", "الوجه - الخد الأيمن")),
+            Expanded(child: _buildInfoBox("موضع الفحص", "الوجه - الخد الأيمن")),
           ],
         ),
       ],
     );
-  } // <-- الخطأ الثاني: تم حذف النقطة "." من النهاية
+  }
 
-  // شريط التقدم (Progress Bar)
+  // شريط التقدم المرن
   Widget _buildProgressBar(String title, String status, double percentage) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,15 +400,25 @@ class AnalysisResultScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black)),
+          Text(
+            title, 
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.black)),
+          Text(
+            value, 
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.black),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
 
-  // تفاصيل الاستشارة الطبية
+  // الاستشارة الطبية المبدئية
   Widget _buildConsultationDetails(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +429,11 @@ class AnalysisResultScreen extends StatelessWidget {
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.white)),
+              decoration: BoxDecoration(
+                color: Colors.white, 
+                shape: BoxShape.circle, 
+                border: Border.all(color: Colors.white),
+              ),
               child: const Icon(Icons.water_drop, color: AppTheme.greenGlow),
             ),
             const SizedBox(width: 16),
@@ -403,17 +441,20 @@ class AnalysisResultScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("توصيات العناية الفورية", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black)),
+                  const Text(
+                    "توصيات العناية الفورية", 
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black),
+                  ),
                   const SizedBox(height: 12),
                   if (scanResult?.consultation != null && scanResult!.consultation!.isNotEmpty)
                     Text(
                       scanResult!.consultation!,
-                      style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
                     )
                   else ...[
                     _buildListItem("التوقف عن استخدام أي منتجات تجميلية أو عطور على المنطقة المصابة."),
                     _buildListItem("استخدام مرطب طبي خالي من العطور والمواد المهيجة مرتين يومياً."),
-                    _buildListItem("تجنب التعرض المباشر لأشعة الشمس واستخدام واقي شمس مخصص."),
+                    _buildListItem("تجنب التعرض المباشر لأشعة الشمس واستخدم واقي شمس مناسب."),
                   ],
                 ],
               ),
@@ -435,7 +476,7 @@ class AnalysisResultScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 "إذا لم تتحسن الأعراض خلال 3-5 أيام، يُنصح بحجز موعد مع طبيب جلدية مختص فوراً.",
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800, color: Colors.black),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800, color: Colors.black87),
               ),
             ],
           ),
@@ -451,13 +492,18 @@ class AnalysisResultScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("• ", style: TextStyle(color: AppTheme.pinkGlow, fontWeight: FontWeight.bold, fontSize: 18)),
-          Expanded(child: Text(text, style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black))),
+          Expanded(
+            child: Text(
+              text, 
+              style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.black87, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // دائرة مستوى الثقة
+  // مستوى الدقة (مؤشر الثقة الدائري)
   Widget _buildConfidenceOrb(BuildContext context) {
     return Column(
       children: [
@@ -467,7 +513,6 @@ class AnalysisResultScreen extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // الظل المضيء خلف الدائرة
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -500,13 +545,13 @@ class AnalysisResultScreen extends StatelessWidget {
         Text(
           "يعتمد مستوى الثقة على وضوح الصورة ومدى تطابق الأعراض مع قاعدة البيانات الطبية الخاصة بنا.",
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Colors.black),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Colors.black87),
         ),
       ],
     );
   }
 
-  // زر الإجراء الرئيسي
+  // زر استشارة خبير
   Widget _buildGradientButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -531,7 +576,7 @@ class AnalysisResultScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.black, fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.arrow_back, color: Colors.black, size: 24), // السهم لليسار في RTL
+                const Icon(Icons.arrow_back, color: Colors.black, size: 24), // متوافق مع الاتجاه العربي RTL
               ],
             ),
           ),
@@ -540,7 +585,7 @@ class AnalysisResultScreen extends StatelessWidget {
     );
   }
 
-  // تفاصيل الطقس
+  // كرت تفاصيل الطقس
   Widget _buildWeatherDetails(BuildContext context) {
     return Row(
       children: [
@@ -549,7 +594,7 @@ class AnalysisResultScreen extends StatelessWidget {
         if (scanResult?.cityName != null && (scanResult?.temperature != null || scanResult?.humidity != null))
           const SizedBox(width: 16),
         if (scanResult?.temperature != null)
-          Expanded(child: _buildInfoBox("درجة الحرارة", "${scanResult!.temperature!.toStringAsFixed(1)}°")),
+          Expanded(child: _buildInfoBox("الحرارة", "${scanResult!.temperature!.toStringAsFixed(1)}°")),
         if (scanResult?.temperature != null && scanResult?.humidity != null)
           const SizedBox(width: 16),
         if (scanResult?.humidity != null)
@@ -558,7 +603,7 @@ class AnalysisResultScreen extends StatelessWidget {
     );
   }
 
-  // التوهج الخلفي
+  // الهالات المضيئة الخلفية
   Widget _buildAmbientGlow(Color color, double size) {
     return Container(
       width: size,
