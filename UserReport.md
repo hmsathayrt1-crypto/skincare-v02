@@ -6,6 +6,7 @@
 ## 📝 سجل التغييرات
 | التاريخ | التغيير | الملفات المتأثرة |
 |---------|---------|------------------|
+| 2026-06-15 | إنشاء ملف المساعدة `setup.bat` لتبسيط إعداد وتهيئة قاعدة البيانات تلقائياً دون الحاجة لخطوات يدوية في phpMyAdmin | `setup.bat` |
 | 2026-06-15 | إضافة زر إعدادات الخادم العائم (Server Connection Floating Button) وتخزين سجل العناوين السابقة واختبار الاتصال بالخلفية | `lib/main.dart`, `lib/core/router/app_router.dart`, `lib/core/constants/api_endpoints.dart`, `lib/shared/server_config_floating_button.dart` |
 | 2026-06-15 | استرجاع الثيم الفاتح (ThemeMode.light) لتجربة الألوان الفاتحة | `lib/main.dart` |
 | 2026-06-15 | تصحيح استيرادات الحزمة وبناء نسخة APK بنجاح | `lib/main.dart`, `lib/core/services/auth_service.dart`, `lib/core/services/chat_service.dart`, `lib/core/services/scan_service.dart` |
