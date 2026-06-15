@@ -1,199 +1,127 @@
-# 🧴 Dermalyze — SkinCare v02
+### أولاً: اقتراح أفضل لغة/إطار عمل للواجهة الأمامية (Frontend)
+بما أن مشروعك يعتمد بشكل أساسي على **فتح الكاميرا** و**أخذ صلاحيات الموقع (GPS)**، أنصحك بأحد الخيارين التاليين بناءً على هدفك النهائي:
 
-> نظام تحليل البشرة بالذكاء الاصطناعي مع استشارة مبدئية مبنية على بيانات الطقس والموقع الجغرافي.
+1. **الخيار الأول (الأفضل إذا كنت تريد تطبيق موبايل): Flutter (باستخدام لغة Dart)**
+   * **السبب:** يوفر وصولاً ممتازاً وسهلاً لعتاد الهاتف (الكاميرا، الـ GPS)، ويعطيك تطبيقاً يعمل على (Android و iOS) من نفس الكود. واجهات المستخدم فيه سلسة وسريعة.
+2. **الخيار الثاني (الأفضل إذا كنت تريد تطبيق ويب Web App / PWA): React.js أو Next.js (باستخدام JavaScript/TypeScript)**
+   * **السبب:** إذا كنت لا ترغب في بناء تطبيق موبايل وتفضل موقع ويب متوافق مع الجوال (Responsive)، فإن React.js يوفر مكتبات ممتازة لفتح كاميرا الويب (WebRTC) وجلب الموقع الجغرافي (HTML5 Geolocation API).
 
----
-
-## 📱 لقطات الشاشات المُنفذة
-
-| الشاشة | الحالة | الملف |
-|--------|--------|-------|
-| 🏠 الترحيب | ✅ مكتملة UI | `welcome_screen.dart` |
-| 🔐 تسجيل الدخول | ✅ مكتملة UI | `login_screen.dart` |
-| 📝 إنشاء حساب | ✅ مكتملة UI | `register_screen.dart` |
-| 📷 الكاميرا والفحص | ✅ مكتملة UI | `camera_screen.dart` |
-| 📊 نتيجة التحليل | ✅ مكتملة UI | `analysis_result_screen.dart` |
-| 💬 المحادثة الذكية | ✅ مكتملة UI | `chat_screen.dart` |
-| 📅 سجل النتائج | ✅ مكتملة UI | `history_screen.dart` |
-| 👤 الملف الشخصي | ✅ مكتملة UI | `profile_screen.dart` |
+**توصيتي:** إذا كان المشروع هو مشروع تخرج أو منتج تجاري يستهدف المستخدم العادي لمعاينة بشرته، فاستخدام **Flutter** سيعطي انطباعاً احترافياً وتجربة مستخدم (UX) أفضل بكثير عند التقاط الصور.
 
 ---
 
-## 🏗️ هيكل المشروع
+### ثانياً: خطة العمل التفصيلية للمشروع
 
-```
-lib/
-├── main.dart                          # نقطة الدخول (MaterialApp.router)
-├── core/
-│   ├── router/
-│   │   └── app_router.dart            # ✅ موجه التنقل (GoRouter)
-│   ├── theme/
-│   │   └── app_theme.dart             # ✅ الثيم الفاتح + الداكن
-│   ├── constants/
-│   │   ├── app_colors.dart            # ✅ ثوابت الألوان
-│   │   ├── app_strings.dart           # ✅ ثوابت النصوص العربية
-│   │   └── api_endpoints.dart         # ✅ روابط API
-│   ├── errors/
-│   │   └── failures.dart              # ✅ كلاسات الأخطاء
-│   ├── network/
-│   │   └── dio_client.dart            # ✅ عميل HTTP (Dio + Interceptors)
-│   └── utils/
-│       └── helpers.dart               # ✅ دوال مساعدة
-├── shared/
-│   └── widgets/
-│       └── custom_button.dart         # ✅ زر مخصص قابل لإعادة الاستخدام
-└── features/
-    ├── onboarding/
-    │   └── screens/
-    │       └── welcome_screen.dart    # ✅ شاشة الترحيب
-    ├── auth/
-    │   └── screens/
-    │       ├── login_screen.dart      # ✅ تسجيل الدخول
-    │       └── register_screen.dart   # ✅ إنشاء حساب
-    ├── skin_analysis/
-    │   ├── screens/
-    │   │   ├── camera_screen.dart     # ✅ شاشة الكاميرا
-    │   │   └── analysis_result_screen.dart  # ✅ نتيجة التحليل
-    │   └── services/
-    │       ├── camera_service.dart    # ✅ خدمة الكاميرا
-    │       └── location_service.dart  # ✅ خدمة الموقع GPS
-    ├── ai_chat/
-    │   └── screens/
-    │       └── chat_screen.dart      # ✅ المحادثة الذكية
-    ├── history/
-    │   └── screens/
-    │       └── history_screen.dart   # ✅ سجل النتائج
-    └── profile/
-        └── screens/
-            └── profile_screen.dart   # ✅ الملف الشخصي
-```
+**المرحلة 1: الدراسة النظرية والتحضير (Theoretical Study)**
+* البحث عن قواعد بيانات (Datasets) أمراض البشرة (مثل HAM10000 أو ISIC).
+* اختيار نموذج الرؤية الحاسوبية (CV) المناسب (مثل YOLOv8، ResNet50، أو MobileNetV2 لأنه خفيف).
+* اختيار نموذج معالجة اللغة الطبيعية (NLP) (مثل OpenAI GPT-4 API أو نموذج مفتوح المصدر مثل LLaMA-3).
+* تحديد موفر بيانات الطقس (مثل OpenWeatherMap API).
+
+**المرحلة 2: التخطيط الأولي (UI/UX Design)**
+* رسم مسار المستخدم (User Flow): تسجيل الدخول -> الشاشة الرئيسية -> التقاط صورة وتحديد الموقع -> شاشة التحميل (تحليل AI) -> عرض الاستشارة (المرض المحتمل، تأثير الطقس، النصيحة).
+* تصميم الواجهات باستخدام Figma أو Adobe XD.
+
+**المرحلة 3: تصميم وبناء قاعدة البيانات (سنتناولها بالتفصيل أدناه)**
+* تصميم ER Diagram.
+* إنشاء الجداول والروابط باستخدام PostgreSQL أو MySQL (أنصح بـ PostgreSQL لعملها الممتاز مع FastAPI).
+
+**المرحلة 4: برمجة الواجهة الخلفية (Backend باستخدام FastAPI)**
+* بناء هيكل المشروع (Routers, Models, Schemas, Database connection).
+* برمجة نقطة النهاية (Endpoint) لاستقبال الصورة وحفظها (على السيرفر أو AWS S3).
+* برمجة الـ Endpoint لاستقبال إحداثيات الـ GPS وجلب حالة الطقس عبر OpenWeatherMap.
+* ربط نموذج الـ CV لتحليل الصورة المستلمة وإرجاع النتيجة.
+* إرسال (نتيجة الـ CV + بيانات الطقس) إلى نموذج الـ NLP لتوليد الاستشارة الطبية.
+* إعادة النتيجة النهائية (JSON Format) إلى الواجهة الأمامية.
+
+**المرحلة 5: برمجة الواجهة الأمامية (Frontend - Flutter أو React)**
+* بناء واجهات المستخدم بناءً على تصميم Figma.
+* طلب صلاحيات الكاميرا والموقع (Permissions).
+* إرسال الطلبات (HTTP Requests/Multipart) إلى FastAPI.
+* عرض النتائج بطريقة جذابة ومفهومة للمستخدم.
+
+**المرحلة 6: الاختبار والتجريب (Testing)**
+* اختبار استجابة الـ API باستخدام Postman أو Swagger (المدمج تلقائياً في FastAPI).
+* تجربة النظام في ظروف إضاءة مختلفة للصور، وفي مواقع ذات طقس مختلف للتأكد من تغير الاستشارة.
+* معالجة الأخطاء (Error Handling).
+
+**المرحلة 7: توثيق النتائج (Documentation)**
+* كتابة التقرير النهائي أو مستندات المشروع.
+* توثيق الكود البرمجي وكيفية تشغيل النظام.
 
 ---
 
-## ✅ اللي تم إنجازه
+### ثالثاً: خطوة البداية - بناء قاعدة البيانات (Database / ER Diagram)
 
-### المرحلة 1 — التحليل الثابت (73 مشكلة → 0)
-- [x] استبدال 50+ استدعاء `withOpacity()` المهملة بـ `withValues(alpha:)` عبر 8 ملفات
-- [x] إصلاح 12 مشكلة `prefer_const_constructors` عبر 5 ملفات
-- [x] حذف استيراد غير مستخدم في `history_screen.dart`
-- [x] حذف `default` زائد في switch statement
-- [x] النتيجة: `flutter analyze` = **0 مشاكل**
+نظامك يحتاج إلى قاعدة بيانات بسيطة وفعالة لتخزين بيانات المستخدمين، الصور، بيانات الطقس، ونتائج التحليل. سنستخدم نظام قواعد البيانات العلائقية (Relational Database) باستخدام أداة مثل SQLAlchemy (المفضلة مع FastAPI).
 
-### المرحلة 2 — الملفات الفارغة (9 ملفات → مكتملة)
-- [x] `app_colors.dart` — 30+ ثابت لون
-- [x] `app_strings.dart` — 60+ ثابت نصي عربي
-- [x] `api_endpoints.dart` — روابط API (FastAPI backend)
-- [x] `failures.dart` — 7 أنواع أخطاء (Server, Network, Cache, Auth, Camera, Location, Validation)
-- [x] `dio_client.dart` — Singleton مع Auth Interceptor + رفع ملفات
-- [x] `helpers.dart` — تنسيق تاريخ عربي، تحقق، قوة كلمة مرور
-- [x] `custom_button.dart` — ويدجت زر متدرج/مخطط/تحميل
-- [x] `camera_service.dart` — تهيئة، تصوير، تبديل، فلاش
-- [x] `location_service.dart` — GPS، إحداثيات، بث مستمر
+إليك هيكل الجداول (DB Schema):
 
-### المرحلة 3 — البنية المعمارية
-- [x] تطبيق `GoRouter` مع 8 مسارات وصفحة خطأ عربية
-- [x] تحديث `main.dart` لاستخدام `MaterialApp.router`
-- [x] إضافة Dark Theme كامل في `app_theme.dart`
-- [x] إكمال `colorScheme` و 6 أنماط نصوص مفقودة
-- [x] إضافة `inputDecorationTheme` للثيمين
-- [x] إنشاء مجلدات `assets/images/` و `assets/icons/`
-- [x] تفعيل lint rules في `analysis_options.yaml`
-- [x] إصلاح `widget_test.dart` لاختبار شاشة الترحيب الفعلية
+#### 1. جدول المستخدمين (Users Table)
+يحتوي على بيانات المستخدم الأساسية.
+* `id` (Primary Key, UUID أو Integer)
+* `full_name` (String): اسم المستخدم
+* `email` (String, Unique): البريد الإلكتروني
+* `password_hash` (String): كلمة المرور المشفرة
+* `skin_type` (String, Nullable): نوع البشرة إذا كان المستخدم يعرفه (جافة، دهنية، مختلطة).
+* `created_at` (DateTime): تاريخ إنشاء الحساب.
 
----
+#### 2. جدول الفحوصات (Scans / Consultations Table)
+هذا هو الجدول الأساسي الذي يربط كل شيء ببعضه.
+* `id` (Primary Key, UUID أو Integer)
+* `user_id` (Foreign Key -> Users.id): لربط الفحص بالمستخدم.
+* `image_path` (String): مسار تخزين الصورة (لا نخزن الصورة في قاعدة البيانات، بل نرفعها على السيرفر ونخزن الرابط/المسار هنا).
+* `scan_date` (DateTime): تاريخ ووقت إجراء الفحص.
 
-## 🔧 اللي متبقي (خطوات قادمة)
+**بيانات الموقع والطقس (Location & Weather Data):**
+* `latitude` (Float): خط العرض.
+* `longitude` (Float): خط الطول.
+* `temperature` (Float): درجة الحرارة وقت الفحص.
+* `humidity` (Float): نسبة الرطوبة وقت الفحص.
+* `uv_index` (Float, Optional): مؤشر الأشعة فوق البنفسجية (مهم جداً للبشرة).
 
-### 🔴 أولوية عالية — ربط الباك اند
+**نتائج الذكاء الاصطناعي (AI Results):**
+* `cv_detected_condition` (String): المرض أو الحالة المكتشفة من نموذج الرؤية (مثال: Acne, Eczema, Normal).
+* `cv_confidence_score` (Float): نسبة دقة نموذج الـ CV (مثال: 0.95 يعني 95%).
+* `nlp_consultation_text` (Text): النص الكامل للاستشارة التي ولدها نموذج معالجة اللغات الطبيعية.
 
-| المهمة | التفاصيل |
-|--------|----------|
-| ربط API تسجيل الدخول | `DioClient` جاهز، تحتاج تربطه بـ `login_screen.dart` عبر Provider/Repository |
-| ربط API إنشاء حساب | نفس الشي لـ `register_screen.dart` |
-| رفع صورة البشرة للسيرفر | `CameraService.takePhoto()` جاهز، تحتاج ترسل الصورة عبر `DioClient.uploadFile()` |
-| عرض نتيجة التحليل الحقيقية | حالياً بيانات وهمية في `analysis_result_screen.dart`، تحتاج تستقبلها من API |
-| ربط المحادثة الذكية | `chat_screen.dart` يحتاج WebSocket أو polling مع API |
-| جلب سجل التحليلات | `history_screen.dart` يحتاج يجلب البيانات من `/analysis/history` |
-
-### 🟡 أولوية متوسطة — إدارة الحالة
-
-| المهمة | التفاصيل |
-|--------|----------|
-| إنشاء Providers (Riverpod) | `auth_provider.dart`, `analysis_provider.dart`, `chat_provider.dart`, `profile_provider.dart` |
-| إنشاء Repositories | طبقة Repository بين Services وProviders (Clean Architecture) |
-| إدارة Token المصادقة | حفظ/تجديد/حذف token من SharedPreferences |
-| نموذج بيانات (Models) | `UserModel`, `AnalysisResultModel`, `ChatMessageModel`, `ScanResultModel` |
-
-### 🟡 أولوية متوسطة — الكاميرا الحقيقية
-
-| المهمة | التفاصيل |
-|--------|----------|
-| استبدال الصورة الوهمية بـ CameraPreview | `camera_screen.dart` يستخدم صورة ثابتة حالياً، لازم يستبدلها ببث الكاميرا الحي |
-| ربط `CameraService` | تهيئة الكاميرا عند فتح الشاشة، عرض Preview، التقاط صورة حقيقية |
-| ربط `LocationService` | جلب إحداثيات حقيقية وعرض الطقس بدل البيانات الوهمية |
-
-### 🟢 أولوية منخفضة — تحسينات
-
-| المهمة | التفاصيل |
-|--------|----------|
-| شاشة نسيان كلمة المرور | الزر موجود لكن لا يفعل شيء |
-| تسجيل الدخول بـ Google/Facebook | الأزرار موجودة بدون وظيفة |
-| إشعارات Push | غير موجودة |
-| تخزين مؤقت للصور | `CachedNetworkImage` مستخدم لكن بدون سياسة تخزين |
-| اختبارات الوحدة | فقط smoke test واحد موجود، يحتاج اختبارات للـ Services وProviders |
-| دعم اللغة الإنجليزية | التطبيق عربي فقط حالياً |
-| التحقق من المدخلات | حقول البريد/كلمة المرور بدون Validation فعلي |
+#### العلاقات (Relationships):
+* **One-to-Many:** كل مستخدم (User) يمكنه القيام بعدة فحوصات (Scans). `User (1) ----> (M) Scans`
 
 ---
 
-## 📊 إحصائيات المشروع
+**مخطط الجداول (Text-based ER Diagram):**
 
-| المؤشر | القيمة |
-|--------|--------|
-| عدد ملفات Dart | 20 |
-| إجمالي الأسطر | ~3,500+ |
-| عدد الشاشات | 8 |
-| عدد الخدمات | 2 |
-| عدد الثوابت | 3 |
-| المشاكل (flutter analyze) | **0** ✅ |
-| الاعتماديات | 9 حزم |
-
-## 🛠️ التقنيات المستخدمة
-
-| التقنية | الحزمة | الإصدار |
-|---------|--------|---------|
-| إدارة الحالة | `flutter_riverpod` | ^2.4.9 |
-| التنقل | `go_router` | ^13.0.1 |
-| HTTP | `dio` | ^5.4.0 |
-| الكاميرا | `camera` | ^0.10.5+9 |
-| الموقع | `geolocator` | ^10.1.0 |
-| الصلاحيات | `permission_handler` | ^11.2.0 |
-| الخطوط | `google_fonts` | ^6.1.0 |
-| الصور | `cached_network_image` | ^3.3.1 |
-| التخزين المحلي | `shared_preferences` | ^2.2.2 |
-
----
-
-## 🚀 تشغيل المشروع
-
-```bash
-# استنساخ المستودع
-git clone https://github.com/hmsathayrt1-crypto/skincare-v02.git
-cd skincare-v02
-
-# تثبيت الاعتماديات
-flutter pub get
-
-# تشغيل التطبيق
-flutter run
-
-# فحص المشاكل
-flutter analyze
+```text
+[ Users ]
++----------------+
+| PK  id         | 1
+|     full_name  | |
+|     email      | |
+|     password   | |
+|     skin_type  | |
+|     created_at | |
++----------------+ |
+                   |
+                   | (One-to-Many)
+                   |
+                   v M
+[ Scans ]
++-------------------------+
+| PK  id                  |
+| FK  user_id             |
+|     image_path          |
+|     scan_date           |
+|     latitude            |
+|     longitude           |
+|     temperature         |
+|     humidity            |
+|     uv_index            |
+|     cv_detected_cond    |
+|     cv_confidence       |
+|     nlp_consultation    |
++-------------------------+
 ```
 
----
-
-## 📁 الملفات المرجعية
-
-- [`ImplementationPlan.md`](./ImplementationPlan.md) — خطة الإصلاح التفصيلية (73 مشكلة)
-- [`report01.md`](./report01.md) — تقرير الإصلاحات النهائي
+**ما هي خطوتك التالية؟**
+إذا وافقت على هذا الهيكل، يمكننا الانتقال فوراً إلى **المرحلة الرابعة** والبدء بكتابة كود الـ **FastAPI** لإنشاء هذه الجداول باستخدام (SQLAlchemy و Pydantic). هل نبدأ بكتابة كود الـ Backend؟

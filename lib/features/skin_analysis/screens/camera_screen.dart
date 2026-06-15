@@ -1,33 +1,50 @@
-﻿import 'dart:ui';
+import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/services/scan_service.dart';
+import '../../../core/models/scan_model.dart';
 import '../services/camera_service.dart';
 
-class CameraScreen extends StatefulWidget {
+class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({super.key});
 
   @override
-  State<CameraScreen> createState() => _CameraScreenState();
+  ConsumerState<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+class _CameraScreenState extends ConsumerState<CameraScreen>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   final CameraService _cameraService = CameraService();
   bool _isCameraReady = false;
   bool _isFlashOn = false;
   bool _isFrontCamera = false;
+  bool _isAnalyzing = false;
+  double? _latitude;
+  double? _longitude;
+
+  late AnimationController _scanLineController;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _scanLineController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
     _initializeCamera();
+    _getCurrentLocation();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _scanLineController.dispose();
     _cameraService.dispose();
     super.dispose();
   }
@@ -47,6 +64,30 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       setState(() {
         _isCameraReady = success;
       });
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+        });
+      }
+    } catch (_) {
+      // silently ignore location errors
     }
   }
 
@@ -70,8 +111,29 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   Future<void> _capturePhoto() async {
     final photo = await _cameraService.takePhoto();
-    if (photo != null && mounted) {
-      context.push('/analysis');
+    if (photo == null || !mounted) return;
+
+    setState(() => _isAnalyzing = true);
+
+    try {
+      final scanService = ScanService();
+      final ScanModel result = await scanService.analyzeImage(
+        filePath: photo.path,
+        latitude: _latitude,
+        longitude: _longitude,
+      );
+
+      if (!mounted) return;
+      context.push('/analysis', extra: result);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل التحليل: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+      }
     }
   }
 
@@ -101,7 +163,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             ),
           ),
 
-          // 3. شريط البيانات البيئية (الطقس والموقع)
+          // 3. شريط البيانات البيئية (الموقع)
           Positioned(
             top: 100,
             left: 24,
@@ -148,6 +210,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             right: 0,
             child: _buildCameraControls(),
           ),
+
+          // 7. Loading overlay during analysis
+          if (_isAnalyzing) _buildAnalyzingOverlay(),
         ],
       ),
     );
@@ -184,11 +249,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('القائمة الجانبية')),
-                );
+                if (context.canPop()) {
+                  context.pop();
+                }
               },
             ),
             title: const Text(
@@ -196,16 +261,19 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
             ),
             actions: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300, width: 2),
+              GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade300, width: 2),
+                    ),
+                    child: const Icon(Icons.person, color: Colors.grey, size: 24),
                   ),
-                  child: const Icon(Icons.person, color: Colors.grey, size: 24),
                 ),
               ),
             ],
@@ -216,6 +284,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   }
 
   Widget _buildEnvironmentalData() {
+    final locationText = (_latitude != null && _longitude != null)
+        ? '${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}'
+        : 'جاري التحديد...';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(50),
       child: BackdropFilter(
@@ -229,17 +301,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 32, offset: Offset(0, 8))],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildDataPoint(Icons.thermostat, "24°"),
-              Container(width: 1, height: 20, color: Colors.black45),
-              _buildDataPoint(Icons.water_drop, "45%"),
-              Container(width: 1, height: 20, color: Colors.black45),
-              _buildDataPoint(Icons.light_mode, "UV: 6"),
-              Container(width: 1, height: 20, color: Colors.black45),
-              const Text(
-                "34.05,-118",
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 11),
+              const Icon(Icons.location_on, color: Colors.black, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                locationText,
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13),
                 textDirection: TextDirection.ltr,
               ),
             ],
@@ -249,20 +317,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     );
   }
 
-  Widget _buildDataPoint(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.black, size: 18),
-        const SizedBox(width: 4),
-        Text(text, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 11)),
-      ],
-    );
-  }
-
   Widget _buildScanningFrame() {
+    final frameSize = MediaQuery.of(context).size.width * 0.75;
+    final frameHeight = MediaQuery.of(context).size.width * 1.0;
+
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.75,
-      height: MediaQuery.of(context).size.width * 1.0,
+      width: frameSize,
+      height: frameHeight,
       child: Stack(
         children: [
           _buildCorner(Alignment.topLeft),
@@ -270,13 +331,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           _buildCorner(Alignment.bottomLeft),
           _buildCorner(Alignment.bottomRight),
 
-          // خط المسح المتحرك
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(seconds: 2),
-            builder: (context, value, child) {
+          // خط المسح المتحرك - يكرر باستمرار
+          AnimatedBuilder(
+            animation: _scanLineController,
+            builder: (context, child) {
               return Positioned(
-                top: value * (MediaQuery.of(context).size.width * 1.0 - 4),
+                top: _scanLineController.value * (frameHeight - 4),
                 left: 0,
                 right: 0,
                 child: Container(
@@ -334,7 +394,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       children: [
         // زر الفلاش - فعال
         GestureDetector(
-          onTap: _isCameraReady ? _toggleFlash : null,
+          onTap: _isCameraReady && !_isAnalyzing ? _toggleFlash : null,
           child: _buildGlassCircleButton(
             _isFlashOn ? Icons.flash_on : Icons.flash_off,
             48,
@@ -344,7 +404,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
         // زر الالتقاط الرئيسي
         GestureDetector(
-          onTap: _isCameraReady ? _capturePhoto : null,
+          onTap: _isCameraReady && !_isAnalyzing ? _capturePhoto : null,
           child: Container(
             width: 80,
             height: 80,
@@ -382,7 +442,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
         // زر تدوير الكاميرا - فعال
         GestureDetector(
-          onTap: _isCameraReady ? _switchCamera : null,
+          onTap: _isCameraReady && !_isAnalyzing ? _switchCamera : null,
           child: _buildGlassCircleButton(
             Icons.flip_camera_ios,
             48,
@@ -402,6 +462,33 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           height: size,
           color: Colors.white.withValues(alpha: 0.5),
           child: Icon(icon, color: Colors.black, size: 24),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalyzingOverlay() {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              color: AppTheme.greenGlow,
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'جاري تحليل بشرتك بالذكاء الاصطناعي...',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              textDirection: TextDirection.rtl,
+            ),
+          ],
         ),
       ),
     );

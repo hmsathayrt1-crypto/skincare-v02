@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../shared/main_layout.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -10,11 +12,30 @@ import '../../features/skin_analysis/screens/analysis_result_screen.dart';
 import '../../features/ai_chat/screens/chat_screen.dart';
 import '../../features/history/screens/history_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../core/models/scan_model.dart';
 
 /// موجه التطبيق - تعريف جميع المسارات
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   debugLogDiagnostics: true,
+  redirect: (context, state) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final isLoggedIn = token != null && token.isNotEmpty;
+
+    final publicPaths = ['/', '/login', '/register'];
+    final isOnPublicPath = publicPaths.contains(state.matchedLocation);
+
+    if (!isLoggedIn && !isOnPublicPath) {
+      return '/login';
+    }
+
+    if (isLoggedIn && isOnPublicPath) {
+      return '/home';
+    }
+
+    return null;
+  },
   routes: [
     // ===== مسارات ما قبل تسجيل الدخول (بدون شريط تنقل) =====
     GoRoute(
@@ -37,7 +58,9 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/analysis',
       name: 'analysis',
-      builder: (context, state) => const AnalysisResultScreen(),
+      builder: (context, state) => AnalysisResultScreen(
+        scanResult: state.extra as ScanModel?,
+      ),
     ),
 
     // ===== المسارات الرئيسية (داخل شريط التنقل الثابت) =====
@@ -88,6 +111,12 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+    // ===== مسار الصفحة الرئيسية (للتوجيه بعد تسجيل الدخول) =====
+    GoRoute(
+      path: '/home',
+      name: 'home',
+      redirect: (context, state) => '/chat',
+    ),
   ],
   errorBuilder: (context, state) => Scaffold(
     body: Center(
@@ -111,4 +140,5 @@ class AppRoutes {
   static const chat = '/chat';
   static const history = '/history';
   static const profile = '/profile';
+  static const home = '/home';
 }

@@ -5,7 +5,7 @@ import 'package:skincare_v02/main.dart';
 void main() {
   testWidgets('Welcome screen renders correctly', (WidgetTester tester) async {
     // بناء التطبيق مع ProviderScope
-    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pumpWidget(const ProviderScope(child: DermalyzeApp()));
 
     // انتظار تحميل الصورة من الإنترنت
     await tester.pumpAndSettle();

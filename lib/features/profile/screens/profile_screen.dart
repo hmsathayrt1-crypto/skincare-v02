@@ -1,23 +1,139 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/models/user_model.dart';
 
 enum SkinType { oily, dry, normal, mixed }
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   SkinType? _selectedSkinType = SkinType.mixed;
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
+  bool _controllersPopulated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _populateControllers();
+  }
+
+  void _populateControllers() {
+    final user = ref.read(authProvider).user;
+    if (user != null && !_controllersPopulated) {
+      _nameController.text = user.fullName;
+      _emailController.text = user.email;
+      _phoneController.text = user.phone ?? '';
+      if (user.skinType != null) {
+        _selectedSkinType = _skinTypeFromString(user.skinType!);
+      }
+      _controllersPopulated = true;
+    }
+  }
+
+  SkinType? _skinTypeFromString(String type) {
+    switch (type.toLowerCase()) {
+      case 'oily':
+      case 'دهنية':
+        return SkinType.oily;
+      case 'dry':
+      case 'جافة':
+        return SkinType.dry;
+      case 'normal':
+      case 'عادية':
+        return SkinType.normal;
+      case 'mixed':
+      case 'مختلطة':
+        return SkinType.mixed;
+      default:
+        return null;
+    }
+  }
+
+  String _skinTypeToString(SkinType? type) {
+    switch (type) {
+      case SkinType.oily:
+        return 'oily';
+      case SkinType.dry:
+        return 'dry';
+      case SkinType.normal:
+        return 'normal';
+      case SkinType.mixed:
+        return 'mixed';
+      default:
+        return 'mixed';
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final updatedUser = await _authService.updateProfile({
+        'full_name': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'skin_type': _skinTypeToString(_selectedSkinType),
+      });
+      ref.read(authProvider.notifier).updateUser(updatedUser);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حفظ التغييرات بنجاح'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل حفظ التغييرات: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _logout() async {
+    await ref.read(authProvider.notifier).logout();
+    if (mounted) {
+      context.go('/login');
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final user = ref.watch(authProvider).user;
+
+    // Re-populate if user data arrives after build
+    if (user != null && !_controllersPopulated) {
+      _populateControllers();
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -40,13 +156,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ListView(
             padding: const EdgeInsets.fromLTRB(20, 100, 20, 120),
             children: [
-              _buildAvatarSection(),
+              _buildAvatarSection(user),
               const SizedBox(height: 48),
               _buildInfoCard(),
               const SizedBox(height: 24),
               _buildSkinTypeCard(),
               const SizedBox(height: 32),
-              _buildSaveButton(context),
+              _buildSaveButton(),
+              const SizedBox(height: 16),
+              _buildLogoutButton(),
             ],
           ),
         ],
@@ -90,7 +208,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildAvatarSection() {
+  Widget _buildAvatarSection(UserModel? user) {
+    final displayName = user?.fullName ?? 'المستخدم';
+    final displayEmail = user?.email ?? '';
+
     return Column(
       children: [
         Container(
@@ -102,15 +223,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Container(
             padding: const EdgeInsets.all(3),
             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 60,
-              backgroundImage: CachedNetworkImageProvider("https://lh3.googleusercontent.com/aida-public/AB6AXuC2AyiHuPeKJbOmvjeIS4YGsACjZiCJX34zNRre8YvwPXK8cKMAsmWC_7zEDUzX0KHf8vinhsJEobX6YMkUUBH_9Ru3zc4ZAenyWRfkEWJ7R7LtA1rat75xqDWBwzZRLDIejxrWWTNGb5S0b1vqjyk0Bs5tqmNk9LY5p-HANK-j4EnstJ0_23T4ySK0Tcop_D1b_QUSjGMW0V8WMSFzGZWKr5wWcTQYQEQ_Y04qXJMT7VbHgqwK2pD4wK0_a6kuNM2eMiOWYUZZ_nM"),
+              backgroundColor: AppTheme.pinkGlow.withValues(alpha: 0.3),
+              child: Text(
+                displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
+                style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.black54),
+              ),
             ),
           ),
         ),
         const SizedBox(height: 12),
-        const Text("سارة أحمد", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
-        Text("sara.ahmed@example.com", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black.withValues(alpha: 0.7))),
+        Text(displayName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+        Text(displayEmail, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black.withValues(alpha: 0.7))),
       ],
     );
   }
@@ -141,21 +266,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return _buildGlassCard(children: [
       const Text("المعلومات الشخصية", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
       const SizedBox(height: 24),
-      _buildTextField("الاسم الكامل", "سارة أحمد"),
+      _buildTextField("الاسم الكامل", _nameController, isLtr: false),
       const SizedBox(height: 16),
-      _buildTextField("البريد الإلكتروني", "sara.ahmed@example.com", isLtr: true),
+      _buildTextField("البريد الإلكتروني", _emailController, isLtr: true),
       const SizedBox(height: 16),
-      _buildTextField("رقم الهاتف", "+966 50 123 4567", isLtr: true),
+      _buildTextField("رقم الهاتف", _phoneController, isLtr: true),
     ]);
   }
 
-  Widget _buildTextField(String label, String value, {bool isLtr = false}) {
+  Widget _buildTextField(String label, TextEditingController controller, {bool isLtr = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
         TextFormField(
-          initialValue: value,
+          controller: controller,
           textDirection: isLtr ? TextDirection.ltr : TextDirection.rtl,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           decoration: const InputDecoration(
@@ -220,7 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSaveButton(BuildContext context) {
+  Widget _buildSaveButton() {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
@@ -231,19 +356,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم حفظ التغييرات بنجاح')),
-            );
-          },
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+          onTap: _isLoading ? null : _saveProfile,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Center(
-              child: Text(
-                "حفظ التغييرات",
-                style: TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.w800),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black),
+                    )
+                  : const Text(
+                      "حفظ التغييرات",
+                      style: TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.w800),
+                    ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return Center(
+      child: TextButton.icon(
+        onPressed: _logout,
+        icon: const Icon(Icons.logout, color: Colors.red, size: 22),
+        label: const Text(
+          'تسجيل الخروج',
+          style: TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+            side: const BorderSide(color: Colors.red, width: 1.5),
           ),
         ),
       ),

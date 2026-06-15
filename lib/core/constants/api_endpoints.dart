@@ -1,33 +1,27 @@
-/// ثوابت روابط API الخلفية (FastAPI)
+/// ثوابت روابط API الخلفية (PHP)
 class ApiEndpoints {
   ApiEndpoints._();
 
-  /// الرابط الأساسي للخادم (سيتم تحديثه عند النشر)
-  static const String baseUrl = 'http://localhost:8000/api/v1';
+  /// الرابط الأساسي للخادم
+  static const String baseUrl = 'http://10.0.2.2/backend/api';
 
   // === المصادقة ===
-  static const String authLogin = '/auth/login';
-  static const String authRegister = '/auth/register';
-  static const String authRefresh = '/auth/refresh';
-  static const String authLogout = '/auth/logout';
+  static const String register = '/register.php';
+  static const String login = '/login.php';
+  static const String logout = '/logout.php';
+  static const String profile = '/profile.php';
 
   // === تحليل البشرة ===
-  static const String skinAnalysis = '/analysis/skin';
-  static const String analysisHistory = '/analysis/history';
-  static const String analysisDetail = '/analysis/detail';
+  static const String analyze = '/analyze.php';
+  static const String scans = '/scans.php';
 
   // === المحادثة الذكية ===
-  static const String chatMessage = '/chat/message';
-  static const String chatHistory = '/chat/history';
+  static const String chat = '/chat.php';
 
-  // === المستخدم ===
-  static const String userProfile = '/user/profile';
-  static const String userProfileUpdate = '/user/profile/update';
+  // === أخرى ===
+  static const String tips = '/tips.php';
+  static const String dashboard = '/dashboard.php';
 
-  // === البيانات البيئية ===
-  static const String weatherData = '/weather/current';
-  static const String locationData = '/location/current';
-
-  /// يعيد الرابط الكامل concatenating baseUrl + endpoint
+  /// يعيد الرابط الكامل
   static String fullUrl(String endpoint) => '$baseUrl$endpoint';
 }

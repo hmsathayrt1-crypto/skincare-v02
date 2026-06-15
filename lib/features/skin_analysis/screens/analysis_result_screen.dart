@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/models/scan_model.dart';
 
 class AnalysisResultScreen extends StatelessWidget {
-  const AnalysisResultScreen({super.key});
+  final ScanModel? scanResult;
+  const AnalysisResultScreen({super.key, this.scanResult});
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +122,23 @@ class AnalysisResultScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 24),
+
+                  // بطاقة معلومات الطقس
+                  if (scanResult?.temperature != null || scanResult?.humidity != null || scanResult?.cityName != null)
+                    _buildGlassCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionHeader(Icons.cloud, "معلومات الطقس", AppTheme.greenGlow),
+                          const SizedBox(height: 24),
+                          _buildWeatherDetails(context),
+                        ],
+                      ),
+                    ),
+                  if (scanResult?.temperature != null || scanResult?.humidity != null || scanResult?.cityName != null)
+                    const SizedBox(height: 24),
+
                   const SizedBox(height: 48),
 
                   // زر استشارة خبير
@@ -236,12 +255,21 @@ class AnalysisResultScreen extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBSSzhnwejd6LrjvjedqdCGLB8NS8eH_H246-Qe2Qc1cApwjqRKbrhXK0UD_MaUyV0gh5Vmo20sNvJEJ1yltWgUuyCsuRCtwmaCt9PAuPlRI7ty2KlR1fKEaAzXabjuaFlIGvLDAW270bqi_ue_i2QVqvoTz21zEnEYX_zoBZ7nY-8AgL_HqBjcMxV7j3EpdHOCSYaelyOcHDSRXsekSOyE8yR5lz2CDZY8nNSeeJCIFeu3puR9W6JkkmCAUXZKQb53Et4FfhGLgJY",
-                    fit: BoxFit.cover,
-                  ),
+               ClipRRect(
+                 borderRadius: BorderRadius.circular(12),
+                  child: scanResult?.imagePath != null && scanResult!.imagePath.isNotEmpty
+                      ? Image.network(
+                          scanResult!.imagePath,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 40),
+                          ),
+                        )
+                      : Container(
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.camera_alt, color: Colors.grey, size: 40),
+                        ),
                 ),
                 Positioned(
                   top: 75,
@@ -277,11 +305,11 @@ class AnalysisResultScreen extends StatelessWidget {
             gradient: LinearGradient(colors: [AppTheme.pinkGlow.withValues(alpha: 0.2), AppTheme.greenGlow.withValues(alpha: 0.2)]),
             border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
           ),
-          child: const Text("التهاب الجلد التماسي (محتمل)", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
+          child: Text(scanResult?.condition ?? "جاري التحليل...", style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
         ),
         const SizedBox(height: 12),
         Text(
-          "يُظهر التحليل علامات تتوافق مع التهاب الجلد التماسي الخفيف إلى المتوسط. يلاحظ وجود احمرار سطحي وجفاف في المنطقة المصورة.",
+          scanResult?.consultation ?? "لم يتم تقديم استشارة بعد. يرجى إعادة التحليل.",
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Colors.black),
         ),
         const SizedBox(height: 24),
@@ -377,9 +405,16 @@ class AnalysisResultScreen extends StatelessWidget {
                 children: [
                   const Text("توصيات العناية الفورية", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black)),
                   const SizedBox(height: 12),
-                  _buildListItem("التوقف عن استخدام أي منتجات تجميلية أو عطور على المنطقة المصابة."),
-                  _buildListItem("استخدام مرطب طبي خالي من العطور والمواد المهيجة مرتين يومياً."),
-                  _buildListItem("تجنب التعرض المباشر لأشعة الشمس واستخدام واقي شمس مخصص."),
+                  if (scanResult?.consultation != null && scanResult!.consultation!.isNotEmpty)
+                    Text(
+                      scanResult!.consultation!,
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
+                    )
+                  else ...[
+                    _buildListItem("التوقف عن استخدام أي منتجات تجميلية أو عطور على المنطقة المصابة."),
+                    _buildListItem("استخدام مرطب طبي خالي من العطور والمواد المهيجة مرتين يومياً."),
+                    _buildListItem("تجنب التعرض المباشر لأشعة الشمس واستخدام واقي شمس مخصص."),
+                  ],
                 ],
               ),
             ),
@@ -440,7 +475,7 @@ class AnalysisResultScreen extends StatelessWidget {
                 ),
               ),
               CircularProgressIndicator(
-                value: 0.85,
+                value: scanResult?.confidence ?? 0.0,
                 strokeWidth: 8,
                 backgroundColor: Colors.black.withValues(alpha: 0.05),
                 valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.greenGlow),
@@ -450,7 +485,7 @@ class AnalysisResultScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "85%",
+                      "${((scanResult?.confidence ?? 0) * 100).toInt()}%",
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900, color: Colors.black),
                       textDirection: TextDirection.ltr,
                     ),
@@ -484,9 +519,7 @@ class AnalysisResultScreen extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('سيتم ربطك بخبير مختص قريباً')),
-            );
+            context.push('/chat');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 48.0),
@@ -504,6 +537,24 @@ class AnalysisResultScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  // تفاصيل الطقس
+  Widget _buildWeatherDetails(BuildContext context) {
+    return Row(
+      children: [
+        if (scanResult?.cityName != null)
+          Expanded(child: _buildInfoBox("المدينة", scanResult!.cityName!)),
+        if (scanResult?.cityName != null && (scanResult?.temperature != null || scanResult?.humidity != null))
+          const SizedBox(width: 16),
+        if (scanResult?.temperature != null)
+          Expanded(child: _buildInfoBox("درجة الحرارة", "${scanResult!.temperature!.toStringAsFixed(1)}°")),
+        if (scanResult?.temperature != null && scanResult?.humidity != null)
+          const SizedBox(width: 16),
+        if (scanResult?.humidity != null)
+          Expanded(child: _buildInfoBox("الرطوبة", "${scanResult!.humidity!.toStringAsFixed(0)}%")),
+      ],
     );
   }
 

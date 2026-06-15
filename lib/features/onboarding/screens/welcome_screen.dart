@@ -166,7 +166,7 @@ class WelcomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(50),
           onTap: () {
             // الانتقال لشاشة الكاميرا لاحقاً
-            context.go('/camera');
+            context.go('/login');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),

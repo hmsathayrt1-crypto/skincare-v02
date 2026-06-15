@@ -1,13 +1,73 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/chat_provider.dart';
+import '../../../core/models/chat_message_model.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
   @override
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends ConsumerState<ChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load chat history on init
+    Future.microtask(() {
+      ref.read(chatMessagesProvider.notifier).loadHistory();
+    });
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendMessage() {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+    _messageController.clear();
+    ref.read(chatMessagesProvider.notifier).sendMessage(text);
+    _scrollToBottom();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final messagesAsync = ref.watch(chatMessagesProvider);
+    final isLoadingReply = ref.watch(chatLoadingProvider);
+
+    // Auto-scroll when messages change
+    ref.listen<AsyncValue<List<ChatMessageModel>>>(chatMessagesProvider,
+        (previous, next) {
+      final prevCount = previous?.valueOrNull?.length ?? 0;
+      final nextCount = next.valueOrNull?.length ?? 0;
+      if (nextCount > prevCount) {
+        _scrollToBottom();
+      }
+    });
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _buildGlassAppBar(context),
@@ -40,23 +100,93 @@ class ChatScreen extends StatelessWidget {
             children: [
               // قائمة الرسائل
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 120), // مسافات علوية وسفلية للـ AppBar وشريط الإدخال
-                  children: [
-                    _buildDateDivider("اليوم"),
-                    const SizedBox(height: 24),
-        const _AiMessage(text: "مرحباً! أنا مساعدك الذكي للعناية بالبشرة. بناءً على تحليلك الأخير، يبدو أن بشرتك تميل إلى الجفاف اليوم. كيف تشعرين بها؟"),
-        const SizedBox(height: 24),
-        const _UserMessage(text: "نعم، أشعر ببعض الشد في منطقة الخدين بعد الاستيقاظ."),
-        const SizedBox(height: 24),
-        const _AiMessageWithButtons(
-          text: "هذا طبيعي جداً في مثل هذا الطقس. أوصي بزيادة الترطيب في روتينك الصباحي. هل ترغبين في رؤية بعض التوصيات لمنتجات الترطيب العميق؟",
-        ),
-        const SizedBox(height: 24),
-        const _UserImageMessage(
-                      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuALkKj3rTq2C_GY0bc7pVF0cFLLbVKieoBZQo8Js0ydncB15MpbaHz0YLgwKl5poZndCZVmruJR2slWubLvqiRjFLwqu6YgysE0TByquBmCf3uHQiAH8ipHYteAoDdKlRLjDoMHlbux0ogdZZJV5zVO5Q-NnoVrKmWkkdSjpPhX9cVW5MZdyV9Q6JefWwkMPPNXOkpZ9Ug8foVdIerUx03iqIVtX8DiIlxbP-DQ_xvau5KfBwfou5dXec5bSskyE9ljQUz1D5nMjio",
+                child: messagesAsync.when(
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.pinkGlow,
                     ),
-                  ],
+                  ),
+                  error: (error, _) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 48, color: Colors.redAccent),
+                        const SizedBox(height: 16),
+                        Text(
+                          'حدث خطأ أثناء تحميل المحادثة',
+                          style: TextStyle(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            ref
+                                .read(chatMessagesProvider.notifier)
+                                .loadHistory();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color(0x334F644B),
+                            elevation: 0,
+                            shape: const StadiumBorder(),
+                          ),
+                          child: const Text(
+                            'إعادة المحاولة',
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  data: (messages) {
+                    if (messages.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.chat_bubble_outline,
+                                size: 64,
+                                color: Colors.black.withValues(alpha: 0.3)),
+                            const SizedBox(height: 16),
+                            Text(
+                              'ابدأ محادثتك مع مساعد البشرة الذكي',
+                              style: TextStyle(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(
+                          16, 100, 16, 120),
+                      itemCount: messages.length +
+                          (isLoadingReply ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        // Show typing indicator at the end
+                        if (index == messages.length &&
+                            isLoadingReply) {
+                          return const _TypingIndicator();
+                        }
+                        final message = messages[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: message.isUser
+                              ? _UserMessage(text: message.message)
+                              : _AiMessage(text: message.message),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -90,7 +220,9 @@ class ChatScreen extends StatelessWidget {
                   children: [
                     const CircleAvatar(
                       radius: 20,
-                      backgroundImage: CachedNetworkImageProvider("https://lh3.googleusercontent.com/aida-public/AB6AXuDXVIinq1gOZl3hFIR2B1bu741Zk--rqudqErkNtrREjDixZFwIPxMEO3A-vv5lHocoJKRKBX4GOEtWJ76G_BAbijTAWVKLmFUm2PJoVL092t2s7ytyonAaLE0yOWtT6oTvNrlxWrB_U_UwzNljHLtHo6BwYObOSt_mYah_nZ-Qf_aR6jp3Zx3cPYqXfcuI-kCqdKahF1vyOb5bjmGzObLOjzyi8vSBYt6Ewn9eK-rxm68NA5DQIwiQ95-6fO5qrluS3bFEItwAz4E"),
+                      backgroundColor: Color(0xFFEAE7E7),
+                      child: Icon(Icons.smart_toy,
+                          size: 24, color: Color(0xFF4F644B)),
                     ),
                     Positioned(
                       bottom: 0,
@@ -99,9 +231,10 @@ class ChatScreen extends StatelessWidget {
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD2E9CA), // secondary-fixed
+                          color: const Color(0xFFD2E9CA),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border:
+                              Border.all(color: Colors.white, width: 2),
                         ),
                       ),
                     ),
@@ -111,8 +244,16 @@ class ChatScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("مساعد البشرة الذكي", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text("متصل الآن", style: TextStyle(color: Colors.black.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w600)),
+                    const Text("مساعد البشرة الذكي",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18)),
+                    Text("متصل الآن",
+                        style: TextStyle(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600)),
                   ],
                 ),
               ],
@@ -121,27 +262,16 @@ class ChatScreen extends StatelessWidget {
               IconButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('خيارات إضافية')),
+                    const SnackBar(
+                        content: Text('خيارات إضافية')),
                   );
                 },
-                icon: const Icon(Icons.more_horiz, color: Colors.black),
+                icon: const Icon(Icons.more_horiz,
+                    color: Colors.black),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDateDivider(String text) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAE7E7).withValues(alpha: 0.5), // surface-container-high/50
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black54)),
       ),
     );
   }
@@ -151,7 +281,10 @@ class ChatScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.background.withValues(alpha: 0.0), AppTheme.background],
+          colors: [
+            AppTheme.background.withValues(alpha: 0.0),
+            AppTheme.background
+          ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -165,7 +298,8 @@ class ChatScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(50),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
@@ -175,24 +309,35 @@ class ChatScreen extends StatelessWidget {
                       const SnackBar(content: Text('رفع صورة')),
                     );
                   },
-                  icon: const Icon(Icons.add_photo_alternate_outlined, color: Colors.black54),
+                  icon: const Icon(
+                      Icons.add_photo_alternate_outlined,
+                      color: Colors.black54),
                 ),
-                const Expanded(
+                Expanded(
                   child: TextField(
-                    decoration: InputDecoration.collapsed(
+                    controller: _messageController,
+                    decoration: const InputDecoration.collapsed(
                       hintText: "اسألي مساعدك الذكي...",
-                      hintStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.black45),
+                      hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black45),
                     ),
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
                 IconButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('الإدخال الصوتي')),
+                      const SnackBar(
+                          content: Text('الإدخال الصوتي')),
                     );
                   },
-                  icon: const Icon(Icons.mic_none, color: Colors.black54),
+                  icon: const Icon(Icons.mic_none,
+                      color: Colors.black54),
                 ),
                 Container(
                   width: 40,
@@ -200,15 +345,13 @@ class ChatScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(left: 4),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [AppTheme.pinkGlow, AppTheme.greenGlow]),
+                    gradient: LinearGradient(
+                        colors: [AppTheme.pinkGlow, AppTheme.greenGlow]),
                   ),
                   child: IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('إرسال')),
-                      );
-                    },
-                    icon: const Icon(Icons.send, color: Colors.black, size: 20),
+                    onPressed: _sendMessage,
+                    icon: const Icon(Icons.send,
+                        color: Colors.black, size: 20),
                   ),
                 ),
               ],
@@ -233,7 +376,9 @@ class _AiMessage extends StatelessWidget {
       children: [
         const CircleAvatar(
           radius: 16,
-          backgroundImage: CachedNetworkImageProvider("https://lh3.googleusercontent.com/aida-public/AB6AXuArdyeAEfVRQACREvHmkm1K1Fox494SzieLxVOlBKj7i7XVnOsN-youbji--VMnQDBToEkfaMJxADY9BTP2tTVYIkwjdWPZ1nqHZZGMZgnrds9n5GrYsFQheqjsKcolqcTkAhBVh0fkS2YPuf4YuCWx4WTHfkx9eB4AgjCYRSZ1BBpdy14YToUSb_eyRp_2oc-phXDGGSxQqOdYtbQiZvNQimX5dpTmopWueBZp7TXi5QRG_SZ_VlR3Izdm9mMPbKQwM3cHJs-s4oY"),
+          backgroundColor: Color(0xFFEAE7E7),
+          child:
+              Icon(Icons.smart_toy, size: 18, color: Color(0xFF4F644B)),
         ),
         const SizedBox(width: 8),
         Flexible(
@@ -242,14 +387,17 @@ class _AiMessage extends StatelessWidget {
               topLeft: Radius.circular(20),
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20),
-              topRight: Radius.circular(4), // زاوية حادة
+              topRight: Radius.circular(4),
             ),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 padding: const EdgeInsets.all(16),
-                color: const Color(0x99CFE6C7), // secondary-container/60
-                child: Text(text, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                color: const Color(0x99CFE6C7),
+                child: Text(text,
+                    style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600)),
               ),
             ),
           ),
@@ -273,7 +421,7 @@ class _UserMessage extends StatelessWidget {
         Flexible(
           child: ClipRRect(
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(4), // زاوية حادة
+              topLeft: Radius.circular(4),
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -282,8 +430,11 @@ class _UserMessage extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 padding: const EdgeInsets.all(16),
-                color: const Color(0x99FADADD), // primary-container/60
-                child: Text(text, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                color: const Color(0x99FADADD),
+                child: Text(text,
+                    style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600)),
               ),
             ),
           ),
@@ -299,97 +450,119 @@ class _UserMessage extends StatelessWidget {
   }
 }
 
-// Widget مخصص لرسالة الـ AI التي تحتوي على أزرار
-class _AiMessageWithButtons extends StatelessWidget {
-  final String text;
-  const _AiMessageWithButtons({required this.text});
+// Widget لمؤشر الكتابة
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator();
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _AiMessage(text: text),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.only(right: 48.0), // محاذاة مع رسالة الـ AI
-          child: Row(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('سيتم عرض التوصيات قريباً')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0x334F644B), // secondary/20
-                  elevation: 0,
-                  shape: const StadiumBorder(),
-                ),
-                child: const Text("عرض التوصيات", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم التخطي')),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.black26),
-                  shape: const StadiumBorder(),
-                ),
-                child: const Text("تخطي الآن", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        )
-      ],
-    );
-  }
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
 }
 
-// Widget مخصص لرسالة المستخدم التي تحتوي على صورة
-class _UserImageMessage extends StatelessWidget {
-  final String imageUrl;
-  const _UserImageMessage({required this.imageUrl});
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation1;
+  late Animation<double> _animation2;
+  late Animation<double> _animation3;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+
+    _animation1 = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeInOut),
+      ),
+    );
+    _animation2 = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.2, 0.6, curve: Curves.easeInOut),
+      ),
+    );
+    _animation3 = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 0.8, curve: Curves.easeInOut),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
+        const CircleAvatar(
+          radius: 16,
+          backgroundColor: Color(0xFFEAE7E7),
+          child:
+              Icon(Icons.smart_toy, size: 18, color: Color(0xFF4F644B)),
+        ),
+        const SizedBox(width: 8),
         ClipRRect(
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(4),
+            topLeft: Radius.circular(20),
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topRight: Radius.circular(4),
           ),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
-              padding: const EdgeInsets.all(4),
-              color: const Color(0x66FADADD), // primary-container/40
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  width: 192, // w-48
-                  height: 192, // h-48
-                  fit: BoxFit.cover,
-                ),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 14),
+              color: const Color(0x99CFE6C7),
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildDot(_animation1),
+                      const SizedBox(width: 4),
+                      _buildDot(_animation2),
+                      const SizedBox(width: 4),
+                      _buildDot(_animation3),
+                    ],
+                  );
+                },
               ),
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        const CircleAvatar(
-          radius: 16,
-          backgroundColor: Color(0xFFEAE7E7),
-          child: Icon(Icons.person, size: 20, color: Colors.black54),
-        ),
       ],
+    );
+  }
+
+  Widget _buildDot(Animation<double> animation) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: animation.value,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Color(0xFF4F644B),
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_endpoints.dart';
 
-/// عميل HTTP أحادي يستخدم Dio للاتصال بخادم FastAPI
+/// عميل HTTP أحادي يستخدم Dio للاتصال بخادم PHP
 class DioClient {
   static final DioClient _instance = DioClient._internal();
   factory DioClient() => _instance;
@@ -10,8 +10,8 @@ class DioClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -20,78 +20,36 @@ class DioClient {
     );
     _dio.interceptors.addAll([
       _AuthInterceptor(),
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-      ),
+      LogInterceptor(requestBody: true, responseBody: true),
     ]);
   }
 
   late final Dio _dio;
+  Dio get dio => _dio;
 
-  /// طلب GET
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      return await _dio.get(path, queryParameters: queryParameters);
-    } on DioException {
-      rethrow;
-    }
+  /// حفظ التوكن محلياً
+  Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
   }
 
-  /// طلب POST
-  Future<Response> post(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      return await _dio.post(path, data: data, queryParameters: queryParameters);
-    } on DioException {
-      rethrow;
-    }
+  /// حذف التوكن
+  Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
   }
 
-  /// طلب PUT
-  Future<Response> put(
-    String path, {
-    dynamic data,
-  }) async {
-    try {
-      return await _dio.put(path, data: data);
-    } on DioException {
-      rethrow;
-    }
+  /// التحقق من وجود توكن
+  Future<bool> hasToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('auth_token');
   }
 
-  /// طلب DELETE
-  Future<Response> delete(
-    String path, {
-    dynamic data,
-  }) async {
-    try {
-      return await _dio.delete(path, data: data);
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  /// رفع ملف (صورة البشرة)
-  Future<Response> uploadFile(
-    String path, {
-    required String filePath,
-    String fieldName = 'image',
-  }) async {
-    try {
-      final formData = FormData.fromMap({
-        fieldName: await MultipartFile.fromFile(filePath),
-      });
-      return await _dio.post(path, data: formData);
-    } on DioException {
-      rethrow;
-    }
+  /// جلب التوكن
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
   }
 }
 
@@ -101,7 +59,7 @@ class _AuthInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
@@ -110,9 +68,9 @@ class _AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
-      // رمز المصادقة منتهي - يمكن إضافة منطق تجديد الرمز هنا
       SharedPreferences.getInstance().then((prefs) {
         prefs.remove('auth_token');
+        prefs.remove('user_data');
       });
     }
     handler.next(err);
