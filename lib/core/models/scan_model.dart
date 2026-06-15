@@ -1,3 +1,5 @@
+import '../constants/api_endpoints.dart';
+
 class ScanModel {
   final int id;
   final String imagePath;
@@ -48,6 +50,15 @@ class ScanModel {
       consultation: json['nlp_consultation_text'] ?? json['consultation'],
       notes: json['notes'],
     );
+  }
+
+  /// رابط الصورة الكامل. الباك إند يرجّع مساراً نسبياً مثل
+  /// `/backend/uploads/scan_xxx.jpg`، فنركّب عليه مضيف السيرفر الحالي.
+  String get fullImageUrl {
+    if (imagePath.isEmpty) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    final path = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+    return 'http://${ApiEndpoints.serverIpPort}$path';
   }
 
   static double? _toDouble(dynamic v) {

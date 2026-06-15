@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:skincare_v02/core/models/user_model.dart';
 import 'package:skincare_v02/core/network/dio_client.dart';
 import 'package:skincare_v02/core/constants/api_endpoints.dart';
@@ -43,7 +42,7 @@ class AuthService {
       await _client.saveToken(authResp.token);
       return authResp;
     }
-    throw Exception(data['error'] ?? 'Registration failed');
+    throw Exception(data['message'] ?? 'Registration failed');
   }
 
   Future<AuthResponse> login({
@@ -60,7 +59,7 @@ class AuthService {
       await _client.saveToken(authResp.token);
       return authResp;
     }
-    throw Exception(data['error'] ?? 'Login failed');
+    throw Exception(data['message'] ?? 'Login failed');
   }
 
   Future<void> logout() async {
@@ -74,9 +73,9 @@ class AuthService {
     final resp = await _client.dio.get(ApiEndpoints.profile);
     final data = resp.data as Map<String, dynamic>;
     if (data['success'] == true) {
-      return UserModel.fromJson(data);
+      return UserModel.fromJson(data['user'] ?? data);
     }
-    throw Exception(data['error'] ?? 'Failed to load profile');
+    throw Exception(data['message'] ?? 'Failed to load profile');
   }
 
   Future<UserModel> updateProfile(Map<String, dynamic> updates) async {
@@ -85,6 +84,6 @@ class AuthService {
     if (data['success'] == true) {
       return UserModel.fromJson(data['user'] ?? data);
     }
-    throw Exception(data['error'] ?? 'Failed to update profile');
+    throw Exception(data['message'] ?? 'Failed to update profile');
   }
 }

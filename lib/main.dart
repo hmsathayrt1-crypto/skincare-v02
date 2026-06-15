@@ -5,22 +5,29 @@ import 'package:skincare_v02/core/router/app_router.dart';
 import 'package:skincare_v02/core/theme/app_theme.dart';
 import 'package:skincare_v02/core/constants/api_endpoints.dart';
 import 'package:skincare_v02/core/network/dio_client.dart';
+import 'package:skincare_v02/core/providers/auth_provider.dart';
 import 'package:skincare_v02/shared/server_config_floating_button.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // تحميل إعدادات الاتصال المخزنة محلياً عند الإقلاع
   final prefs = await SharedPreferences.getInstance();
   final savedIpPort = prefs.getString('server_ip_port') ?? '127.0.0.1:80';
   ApiEndpoints.serverIpPort = savedIpPort;
-  
+
   // تهيئة العنوان الأساسي لـ DioClient مباشرة
   DioClient().dio.options.baseUrl = ApiEndpoints.baseUrl;
 
+  // استرجاع جلسة المستخدم المخزّنة (التوكن + بياناته) قبل بناء الواجهة،
+  // حتى لا تظهر شاشة الملف الشخصي فارغة بعد إعادة فتح التطبيق.
+  final container = ProviderContainer();
+  await container.read(authProvider.notifier).loadFromStorage();
+
   runApp(
-    const ProviderScope(
-      child: DermalyzeApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const DermalyzeApp(),
     ),
   );
 }

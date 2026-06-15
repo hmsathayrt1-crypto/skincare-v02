@@ -6,8 +6,9 @@
 ## 📝 سجل التغييرات
 | التاريخ | التغيير | الملفات المتأثرة |
 |---------|---------|------------------|
+| 2026-06-15 | سحب آخر تعديل من GitHub وحل تعارض دمج (Merge Conflict) بنجاح في شاشة نتائج التحليل | `lib/features/skin_analysis/screens/analysis_result_screen.dart` |
 | 2026-06-15 | رفع وتثبيت التعديلات البرمجية الأخيرة بنجاح على GitHub | جميع الملفات المعدلة و `.gitignore` |
-| 2026-06-15 | تشغيل التطبيق بنجاح وتثبيته على الهاتف الأندرويد المتصل `R5CYA0MKBGW` | - |
+| 2026-06-15 | تشغيل التطبيق ومراقبة السجلات للدقيقة الأولى على الهاتف الأندرويد `R5CYA0MKBGW` (لم يتم رصد أخطاء أو كراشات، فقط تحذيرات أداء Choreographer و Davey البسيطة) | - |
 | 2026-06-15 | إنشاء ملف المساعدة `setup.bat` لتبسيط إعداد وتهيئة قاعدة البيانات تلقائياً دون الحاجة لخطوات يدوية في phpMyAdmin | `setup.bat` |
 | 2026-06-15 | إضافة زر إعدادات الخادم العائم (Server Connection Floating Button) وتخزين سجل العناوين السابقة واختبار الاتصال بالخلفية | `lib/main.dart`, `lib/core/router/app_router.dart`, `lib/core/constants/api_endpoints.dart`, `lib/shared/server_config_floating_button.dart` |
 | 2026-06-15 | استرجاع الثيم الفاتح (ThemeMode.light) لتجربة الألوان الفاتحة | `lib/main.dart` |

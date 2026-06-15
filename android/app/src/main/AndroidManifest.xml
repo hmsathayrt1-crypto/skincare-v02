@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- مطلوبة للاتصال بالـ backend في نسخة الـ release (debug/profile لها ملفات منفصلة) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- الكاميرا لالتقاط صورة البشرة -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- الموقع لجلب بيانات الطقس عند التحليل -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <application
         android:label="skincare_v02"
         android:name="${applicationName}"

@@ -61,12 +61,13 @@ function current_user(): array
     $token = $m[1];
 
     $stmt = db()->prepare(
-        'SELECT u.* FROM api_tokens t JOIN users u ON u.id = t.user_id WHERE t.token = ?'
+        'SELECT u.* FROM api_tokens t JOIN users u ON u.id = t.user_id
+         WHERE t.token = ? AND (t.expires_at IS NULL OR t.expires_at > NOW())'
     );
     $stmt->execute([$token]);
     $user = $stmt->fetch();
     if (!$user) {
-        fail('غير مصرّح: توكن غير صالح.', 401);
+        fail('غير مصرّح: توكن غير صالح أو منتهي الصلاحية.', 401);
     }
     return $user;
 }

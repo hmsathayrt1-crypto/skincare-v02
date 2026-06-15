@@ -215,11 +215,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildNavigationDrawer(BuildContext context) {
     return Drawer(
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, const Color(0xFFF5F0F0)],
+            colors: [Colors.white, Color(0xFFF5F0F0)],
           ),
         ),
         child: ListView(
@@ -326,15 +326,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('الوضع الداكن'),
               trailing: Switch(value: false, onChanged: (v) {}),
             ),
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: const Text('اللغة'),
-              trailing: const Text('العربية'),
+            const ListTile(
+              leading: Icon(Icons.language),
+              title: Text('اللغة'),
+              trailing: Text('العربية'),
             ),
-            ListTile(
-              leading: const Icon(Icons.storage),
-              title: const Text('إدارة البيانات'),
-              trailing: const Icon(Icons.chevron_left),
+            const ListTile(
+              leading: Icon(Icons.storage),
+              title: Text('إدارة البيانات'),
+              trailing: Icon(Icons.chevron_left),
             ),
           ],
         ),

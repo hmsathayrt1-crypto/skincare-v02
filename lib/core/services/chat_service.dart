@@ -13,7 +13,7 @@ class ChatService {
           .map((m) => ChatMessageModel.fromJson(m))
           .toList();
     }
-    throw Exception(data['error'] ?? 'Failed to load messages');
+    throw Exception(data['message'] ?? 'Failed to load messages');
   }
 
   Future<ChatMessageModel> sendMessage({
@@ -28,6 +28,6 @@ class ChatService {
     if (data['success'] == true) {
       return ChatMessageModel.fromJson(data['reply']);
     }
-    throw Exception(data['error'] ?? 'Failed to send message');
+    throw Exception(data['message'] ?? 'Failed to send message');
   }
 }

@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -144,7 +143,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('فشل التحليل: تأكد من اتصال السيرفر وحاول مجدداً'),
+          content: const Text('فشل التحليل: تأكد من اتصال السيرفر وحاول مجدداً'),
           backgroundColor: Colors.red.shade700,
           duration: const Duration(seconds: 5),
         ),

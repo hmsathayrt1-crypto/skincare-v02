@@ -1,17 +1,23 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/models/scan_model.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/utils/helpers.dart';
 
-class AnalysisResultScreen extends StatelessWidget {
+class AnalysisResultScreen extends ConsumerWidget {
   final ScanModel? scanResult;
   const AnalysisResultScreen({super.key, this.scanResult});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final size = MediaQuery.of(context).size;
+    // نوع البشرة الحقيقي من ملف المستخدم (إن وُجد)
+    final skinTypeRaw = ref.watch(authProvider).user?.skinType;
+    final skinTypeArabic =
+        (skinTypeRaw != null && skinTypeRaw.isNotEmpty) ? Helpers.getSkinTypeNameArabic(skinTypeRaw) : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -92,7 +98,7 @@ class AnalysisResultScreen extends StatelessWidget {
                       children: [
                         _buildSectionHeader(Icons.analytics, "الحالة المكتشفة", AppTheme.pinkGlow),
                         const SizedBox(height: 24),
-                        _buildConditionDetails(context),
+                        _buildConditionDetails(context, skinTypeArabic),
                       ],
                     ),
                   ),
@@ -186,9 +192,7 @@ class AnalysisResultScreen extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 18,
                   backgroundColor: Colors.white,
-                  backgroundImage: CachedNetworkImageProvider(
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuB5bfCjPjtLaL55XCDV3b0hs9o8xvr5DdFpVprtdVvoW378-FGhJvmp_9B65S2g2Jr7FSS_HxTJOvMt7cvLVxCWPiH1_gKOZyrOO8qw98q-1hRqOnJIk6wPD2ni7x9EFrqVQaWjQihu5yCB5poOeJu1REUw_2BXY3cYsUTYqcd44tcZyz1Q1uWIrR76s7dCME9ZHuvISt2rg3KDxkLVA8rxtjN3M0Mg44QqptedQ4-5bo5Ss1fDcDhCBIOZoqPCxZF5vehbbu0M1-I",
-                  ),
+                  child: Icon(Icons.person, color: Colors.grey, size: 22),
                 ),
               ),
             ],
@@ -241,7 +245,7 @@ class AnalysisResultScreen extends StatelessWidget {
   }
 
   // تفاصيل كرت النتيجة المعدل لتجنب المشاكل البصرية والـ Overflow
-  Widget _buildConditionDetails(BuildContext context) {
+  Widget _buildConditionDetails(BuildContext context, String? skinTypeArabic) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -280,7 +284,7 @@ class AnalysisResultScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(13),
                 child: scanResult?.imagePath != null && scanResult!.imagePath.isNotEmpty
                     ? Image.network(
-                        scanResult!.imagePath,
+                        scanResult!.fullImageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: Colors.grey[200],
@@ -321,12 +325,16 @@ class AnalysisResultScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // تفاصيل نوع البشرة ومستوى الدقة
-                  const Text(
-                    "نوع البشرة: حساسة / جافة",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 6),
+                  // نوع البشرة من ملف المستخدم (يُعرض فقط إن كان محدداً)
+                  if (skinTypeArabic != null) ...[
+                    Text(
+                      "نوع البشرة: $skinTypeArabic",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+
+                  // مستوى الدقة (من نتيجة التحليل الفعلية)
                   Text(
                     "مستوى الدقة: ${((scanResult?.confidence ?? 0.0) * 100).toInt()}%",
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
@@ -335,54 +343,6 @@ class AnalysisResultScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 24),
-
-        // 3. مؤشرات القياس الحيوية
-        _buildProgressBar("مستوى الاحمرار", "متوسط", 0.65),
-        const SizedBox(height: 16),
-        _buildProgressBar("مستوى الجفاف", "مرتفع", 0.80),
-        const SizedBox(height: 24),
-
-        // 4. منطقة التشخيص
-        Row(
-          children: [
-            Expanded(child: _buildInfoBox("المنطقة الجغرافية", scanResult?.cityName ?? "الوجه")),
-            const SizedBox(width: 16),
-            Expanded(child: _buildInfoBox("موضع الفحص", "الوجه - الخد الأيمن")),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // شريط التقدم المرن
-  Widget _buildProgressBar(String title, String status, double percentage) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black)),
-            Text(status, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Container(
-          height: 8,
-          width: double.infinity,
-          decoration: BoxDecoration(color: const Color(0xFFE4E2E1), borderRadius: BorderRadius.circular(8)),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerRight,
-            widthFactor: percentage,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppTheme.greenGlow, AppTheme.pinkGlow]),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
         ),
       ],
     );
@@ -603,15 +563,18 @@ class AnalysisResultScreen extends StatelessWidget {
     );
   }
 
-  // الهالات المضيئة الخلفية
+  // الهالات المضيئة الخلفية — تدرّج شعاعي يتلاشى للشفافية لتأثير توهج ناعم.
+  // (التركيب السابق كان يضع BackdropFilter داخل حاوية ملوّنة فيُلغى مفعول الـ blur.)
   Widget _buildAmbientGlow(Color color, double size) {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.3)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-        child: Container(color: Colors.transparent),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [color.withValues(alpha: 0.35), Colors.transparent],
+          stops: const [0.0, 0.7],
+        ),
       ),
     );
   }

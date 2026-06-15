@@ -14,6 +14,9 @@ class HistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  // الحالة المختارة للتصفية (null = عرض الكل)
+  String? _activeCondition;
+
   @override
   void initState() {
     super.initState();
@@ -184,12 +187,42 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   Widget _buildContent(List<ScanModel> scans) {
+    // استخراج الحالات المتوفرة فعلياً من النتائج لبناء أزرار تصفية حقيقية
+    final conditions = scans
+        .map((s) => s.condition)
+        .where((c) => c != null && c.isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    // إن كانت الحالة المختارة لم تعد موجودة، نرجع للكل
+    final activeExists = _activeCondition == null || conditions.contains(_activeCondition);
+    final effectiveFilter = activeExists ? _activeCondition : null;
+
+    final filtered = effectiveFilter == null
+        ? scans
+        : scans.where((s) => s.condition == effectiveFilter).toList();
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
       children: [
-        _buildFilterPills(context),
+        _buildFilterPills(context, conditions),
         const SizedBox(height: 24),
-        _buildTimeline(scans),
+        if (filtered.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 80),
+            child: Center(
+              child: Text(
+                'لا توجد فحوصات ضمن هذا التصنيف',
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black.withValues(alpha: 0.5)),
+              ),
+            ),
+          )
+        else
+          _buildTimeline(filtered),
       ],
     );
   }
@@ -205,9 +238,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         children: [
           const CircleAvatar(
             radius: 20,
-            backgroundImage: CachedNetworkImageProvider(
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuB0xTWEsprHVuJI2e8O7UBoIMcthurECJQax7Mgy_wv4fDEAxzFxl3_6Q9hVnQ5RA1LcxH-HsAUoAXMOgjRw4ZOc9gDiNdPkxP2xDwPBkgZGUtY-2Y-5v4UmgA9yxhG0BiQQY9wrkJiQsYVDl-XRfyx04icEmpztp7faknYueDtjMZ7q6IiQ4so8fczvRPn-SUOYOKjtvA9Vw8qYuyG-3XWUlC1TFgM6i8v1WGIHe8zOKKDnXbJHzwBbze5KTp6R-MaEvIADrB141Y",
-            ),
+            backgroundColor: Color(0xFFEAE7E7),
+            child: Icon(Icons.person, color: Colors.black54, size: 24),
           ),
           const SizedBox(width: 12),
           Text(
@@ -238,33 +270,26 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildFilterPills(BuildContext context) {
+  Widget _buildFilterPills(BuildContext context, List<String> conditions) {
     return SizedBox(
       height: 40,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          _buildPill(context, "الكل", isActive: true),
-          _buildPill(context, "بشرة دهنية", condition: "oily"),
-          _buildPill(context, "بشرة جافة", condition: "dry"),
-          _buildPill(context, "بشرة مختلطة", condition: "combination"),
+          _buildPill(context, "الكل", condition: null),
+          ...conditions.map((c) => _buildPill(context, c, condition: c)),
         ],
       ),
     );
   }
 
-  Widget _buildPill(BuildContext context, String text, {bool isActive = false, String? condition}) {
+  Widget _buildPill(BuildContext context, String text, {String? condition}) {
+    final isActive = _activeCondition == condition;
     final colors = condition != null ? _getTagColors(condition) : null;
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
       child: TextButton(
-        onPressed: () {
-          if (!isActive) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تصفية: $text')),
-            );
-          }
-        },
+        onPressed: () => setState(() => _activeCondition = condition),
         style: TextButton.styleFrom(
           backgroundColor: isActive
               ? Colors.white
@@ -376,7 +401,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: CachedNetworkImage(
-                        imageUrl: scan.imagePath,
+                        imageUrl: scan.fullImageUrl,
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,

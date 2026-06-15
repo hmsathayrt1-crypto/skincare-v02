@@ -7,9 +7,10 @@ class ScanService {
   final DioClient _client = DioClient();
 
   Future<Map<String, dynamic>> getScans({int page = 1, int limit = 10}) async {
+    // الباك إند يتوقع offset/limit وليس page، فنحوّل رقم الصفحة إلى إزاحة.
     final resp = await _client.dio.get(
       ApiEndpoints.scans,
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {'offset': (page - 1) * limit, 'limit': limit},
     );
     final data = resp.data as Map<String, dynamic>;
     if (data['success'] == true) {
@@ -22,7 +23,7 @@ class ScanService {
         'page': data['page'] ?? page,
       };
     }
-    throw Exception(data['error'] ?? 'Failed to load scans');
+    throw Exception(data['message'] ?? 'Failed to load scans');
   }
 
   Future<ScanModel> getScanById(int id) async {
@@ -31,7 +32,7 @@ class ScanService {
     if (data['success'] == true) {
       return ScanModel.fromJson(data['scan']);
     }
-    throw Exception(data['error'] ?? 'Failed to load scan');
+    throw Exception(data['message'] ?? 'Failed to load scan');
   }
 
   Future<void> deleteScan(int id) async {
@@ -41,7 +42,7 @@ class ScanService {
     );
     final data = resp.data as Map<String, dynamic>;
     if (data['success'] != true) {
-      throw Exception(data['error'] ?? 'Failed to delete scan');
+      throw Exception(data['message'] ?? 'Failed to delete scan');
     }
   }
 
@@ -64,6 +65,6 @@ class ScanService {
     if (data['success'] == true) {
       return ScanModel.fromJson(data['scan']);
     }
-    throw Exception(data['error'] ?? 'Analysis failed');
+    throw Exception(data['message'] ?? 'Analysis failed');
   }
 }
