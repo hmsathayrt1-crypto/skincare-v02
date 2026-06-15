@@ -427,6 +427,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(scan.condition ?? 'غير معروف',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 18,
@@ -448,25 +450,34 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                     color: iconColor),
                               ),
                               const SizedBox(width: 4),
-                              Text('نسبة الثقة: $confidencePercent%',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold, color: Colors.black87)),
+                              Flexible(
+                                child: Text('نسبة الثقة: $confidencePercent%',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, color: Colors.black87)),
+                              ),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: tagColors['bg'],
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: tagColors['border']!),
-                      ),
-                      child: Text(
-                        scan.condition ?? 'غير معروف',
-                        style: const TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: tagColors['bg'],
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: tagColors['border']!),
+                        ),
+                        child: Text(
+                          scan.condition ?? 'غير معروف',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black),
+                        ),
                       ),
                     ),
                   ],
