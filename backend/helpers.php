@@ -113,16 +113,18 @@ function fetch_weather(?float $lat, ?float $lon): array
 }
 
 /* =====================================================================
- *  استدعاء Gemini لتحليل صورة البشرة + توليد الاستشارة (مهمة واحدة)
+ *  استدعاء النموذج لتحليل صورة البشرة + توليد الاستشارة (مهمة واحدة)
+ *  عبر بوابة متوافقة مع OpenAI (chat completions + رؤية).
  *  يرجع مصفوفة: [condition, confidence, consultation]
  * ===================================================================== */
 function analyze_with_gemini(string $imagePath, string $mimeType, array $weather, ?string $skinType): array
 {
-    if (GEMINI_API_KEY === '' || GEMINI_API_KEY === 'PUT_YOUR_AI_STUDIO_API_KEY_HERE') {
-        fail('مفتاح Gemini غير مُعدّ. ضع المفتاح في config.php', 500);
+    if (!ai_key_configured()) {
+        fail('مفتاح الذكاء الاصطناعي غير مُعدّ. ضع المفتاح في config.php', 500);
     }
 
     $imageData = base64_encode(file_get_contents($imagePath));
+    $dataUri   = "data:{$mimeType};base64,{$imageData}";
 
     // سياق الطقس لإدخاله في الـ prompt
     $weatherCtx = 'غير متوفرة';
@@ -139,47 +141,37 @@ function analyze_with_gemini(string $imagePath, string $mimeType, array $weather
     $prompt = <<<TXT
 أنت مساعد طبي متخصص في الأمراض الجلدية (للأغراض التعليمية وليس بديلاً عن طبيب).
 حلّل صورة البشرة المرفقة، وآخذاً بعين الاعتبار بيانات الطقس التالية: {$weatherCtx}. {$skinCtx}
-أعطِ النتيجة بصيغة JSON فقط بالحقول التالية:
+أعطِ النتيجة بصيغة JSON فقط (كائن واحد بدون أي نص إضافي) بالحقول التالية:
 - condition: اسم الحالة/المرض المحتمل (مثل: حب الشباب، إكزيما، بشرة طبيعية...).
 - confidence: رقم بين 0 و 1 يمثل درجة الثقة.
 - consultation: نص استشارة عربية مفصّلة (تشمل وصف الحالة، تأثير الطقس الحالي على البشرة، ونصائح للعناية والروتين المناسب). اختم بتنبيه لمراجعة طبيب مختص.
 TXT;
 
     $payload = [
-        'contents' => [[
-            'parts' => [
-                ['text' => $prompt],
-                ['inline_data' => ['mime_type' => $mimeType, 'data' => $imageData]],
+        'model'    => GEMINI_MODEL,
+        'messages' => [[
+            'role'    => 'user',
+            'content' => [
+                ['type' => 'text',      'text'      => $prompt],
+                ['type' => 'image_url', 'image_url' => ['url' => $dataUri]],
             ],
         ]],
-        'generationConfig' => [
-            'temperature'      => 0.4,
-            'responseMimeType' => 'application/json',
-            'responseSchema'   => [
-                'type'       => 'OBJECT',
-                'properties' => [
-                    'condition'    => ['type' => 'STRING'],
-                    'confidence'   => ['type' => 'NUMBER'],
-                    'consultation' => ['type' => 'STRING'],
-                ],
-                'required' => ['condition', 'confidence', 'consultation'],
-            ],
-        ],
+        'temperature'     => 0.4,
+        'response_format' => ['type' => 'json_object'],
     ];
 
-    $url = GEMINI_ENDPOINT . GEMINI_MODEL . ':generateContent?key=' . GEMINI_API_KEY;
-    $res = http_post_json($url, $payload);
+    $res = http_post_json(GEMINI_ENDPOINT, $payload, ai_auth_headers());
     if ($res === null) {
-        fail('فشل الاتصال بنموذج Gemini.', 502);
+        fail('فشل الاتصال بنموذج الذكاء الاصطناعي.', 502);
     }
 
     $body = json_decode($res, true);
     if (isset($body['error'])) {
-        fail('خطأ من Gemini: ' . ($body['error']['message'] ?? 'غير معروف'), 502);
+        fail('خطأ من النموذج: ' . ($body['error']['message'] ?? 'غير معروف'), 502);
     }
 
-    $text = $body['candidates'][0]['content']['parts'][0]['text'] ?? '';
-    $parsed = json_decode($text, true);
+    $text   = $body['choices'][0]['message']['content'] ?? '';
+    $parsed = extract_json($text);
 
     if (!is_array($parsed)) {
         // خطة بديلة: أعد النص كاستشارة خام إن لم يأتِ JSON سليم
@@ -250,39 +242,98 @@ function buildChatContext(array $user, ?int $scanId): string
  * ===================================================================== */
 function chatWithGemini(string $userMessage, string $context, ?string $skinType): string
 {
-    if (GEMINI_API_KEY === '' || GEMINI_API_KEY === 'PUT_YOUR_AI_STUDIO_API_KEY_HERE') {
+    if (!ai_key_configured()) {
         return 'عذراً، خدمة المحادثة غير متاحة حالياً. يرجى المحاولة لاحقاً.';
     }
 
-    $prompt = <<<TXT
+    $skinCtx = $skinType ? "نوع بشرة المستخدم: {$skinType}." : '';
+
+    $systemPrompt = <<<TXT
 أنت مساعد ذكي متخصص في العناية بالبشرة (للأغراض التعليمية).
 أجب بأسلوب ودود وبسيط بالعربية. أعطِ نصائح عملية مختصرة.
-لا تشخّص أمراضاً — وجّه للطبيب عند الحاجة.
+لا تشخّص أمراضاً — وجّه للطبيب عند الحاجة. {$skinCtx}
 
+سياق المستخدم:
 {$context}
-
-رسالة المستخدم الحالية: {$userMessage}
 TXT;
 
     $payload = [
-        'contents' => [[
-            'parts' => [['text' => $prompt]],
-        ]],
-        'generationConfig' => [
-            'temperature'     => 0.7,
-            'maxOutputTokens' => 500,
+        'model'    => GEMINI_MODEL,
+        'messages' => [
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user',   'content' => $userMessage],
         ],
+        'temperature' => 0.7,
+        // gemini-3.5-flash نموذج تفكير: يلزم سقف مرتفع ليتسع للتفكير + الجواب
+        // (max_tokens المنخفض يُستهلك بالكامل في التفكير ويعيد رداً فارغاً).
+        'max_tokens'  => 2048,
     ];
 
-    $url = GEMINI_ENDPOINT . GEMINI_MODEL . ':generateContent?key=' . GEMINI_API_KEY;
-    $res = http_post_json($url, $payload);
-
+    $res = http_post_json(GEMINI_ENDPOINT, $payload, ai_auth_headers());
     if ($res === null) {
         return 'عذراً، حدث خطأ في الاتصال. حاول مرة أخرى.';
     }
 
     $body = json_decode($res, true);
-    return $body['candidates'][0]['content']['parts'][0]['text'] ?? 'تعذّر الحصول على رد.';
+    if (isset($body['error'])) {
+        return 'عذراً، تعذّر الحصول على رد: ' . ($body['error']['message'] ?? 'خطأ غير معروف');
+    }
+
+    return $body['choices'][0]['message']['content'] ?? 'تعذّر الحصول على رد.';
+}
+
+/* =====================================================================
+ *  أدوات الذكاء الاصطناعي المشتركة (بوابة متوافقة مع OpenAI)
+ * ===================================================================== */
+function ai_key_configured(): bool
+{
+    return GEMINI_API_KEY !== ''
+        && GEMINI_API_KEY !== 'PUT_YOUR_AI_STUDIO_API_KEY_HERE'
+        && stripos(GEMINI_API_KEY, 'PUT_YOUR') === false;
+}
+
+function ai_auth_headers(): array
+{
+    return [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . GEMINI_API_KEY,
+    ];
+}
+
+/**
+ * يستخرج كائن JSON من نص الرد بشكل متسامح:
+ * يدعم النص النقي، أو المُحاط بأسوار ```json، أو المغروس داخل نص.
+ */
+function extract_json(string $text)
+{
+    $text = trim($text);
+    if ($text === '') {
+        return null;
+    }
+
+    // محاولة مباشرة
+    $parsed = json_decode($text, true);
+    if (is_array($parsed)) {
+        return $parsed;
+    }
+
+    // إزالة أسوار ```json ... ```
+    if (preg_match('/```(?:json)?\s*(.+?)\s*```/is', $text, $m)) {
+        $parsed = json_decode(trim($m[1]), true);
+        if (is_array($parsed)) {
+            return $parsed;
+        }
+    }
+
+    // التقاط أول كائن JSON ضمن النص
+    if (preg_match('/\{.*\}/s', $text, $m)) {
+        $parsed = json_decode($m[0], true);
+        if (is_array($parsed)) {
+            return $parsed;
+        }
+    }
+
+    return null;
 }
 
 /* ---------- أدوات HTTP عبر cURL ---------- */
@@ -299,14 +350,15 @@ function http_get(string $url): ?string
     return $res === false ? null : $res;
 }
 
-function http_post_json(string $url, array $payload): ?string
+function http_post_json(string $url, array $payload, array $headers = ['Content-Type: application/json']): ?string
 {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        // ترميز الوحدات (Unicode) كـ \uXXXX لتفادي أي تشويش عبر البوابة
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => $headers,
         CURLOPT_TIMEOUT        => 60,
         CURLOPT_SSL_VERIFYPEER => false,
     ]);

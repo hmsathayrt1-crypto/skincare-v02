@@ -20,6 +20,10 @@ class ChatNotifier extends StateNotifier<AsyncValue<List<ChatMessageModel>>> {
     }
   }
 
+  void clearHistory() {
+    state = const AsyncValue.data([]);
+  }
+
   Future<void> sendMessage(String text) async {
     final currentMessages = state.valueOrNull ?? [];
 

@@ -125,10 +125,29 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 
       if (!mounted) return;
       context.push('/analysis', extra: result);
+    } on Exception catch (e) {
+      if (!mounted) return;
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل التحليل: $errorMsg'),
+          backgroundColor: Colors.red.shade700,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'إعادة',
+            textColor: Colors.white,
+            onPressed: _capturePhoto,
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل التحليل: ${e.toString()}')),
+        SnackBar(
+          content: Text('فشل التحليل: تأكد من اتصال السيرفر وحاول مجدداً'),
+          backgroundColor: Colors.red.shade700,
+          duration: const Duration(seconds: 5),
+        ),
       );
     } finally {
       if (mounted) {
@@ -178,7 +197,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 
           // 5. نص الإرشادات
           Positioned(
-            bottom: 180,
+            bottom: 250,
             left: 24,
             right: 24,
             child: Center(
@@ -203,9 +222,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
             ),
           ),
 
-          // 6. أزرار التحكم بالكاميرا
+          // 6. أزرار التحكم بالكاميرا (مرفوعة فوق شريط التنقل السفلي)
           Positioned(
-            bottom: 60,
+            bottom: 110,
             left: 0,
             right: 0,
             child: _buildCameraControls(),
@@ -251,9 +270,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                }
+                context.go('/chat');
               },
             ),
             title: const Text(

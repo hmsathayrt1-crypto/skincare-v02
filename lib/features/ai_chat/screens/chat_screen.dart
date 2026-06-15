@@ -168,7 +168,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     return ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.fromLTRB(
-                          16, 100, 16, 120),
+                          16, 100, 16, 180),
                       itemCount: messages.length +
                           (isLoadingReply ? 1 : 0),
                       itemBuilder: (context, index) {
@@ -192,9 +192,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ],
           ),
 
-          // 3. شريط الإدخال (ثابت في الأسفل)
+          // 3. شريط الإدخال (مرفوع فوق شريط التنقل السفلي)
           Positioned(
-            bottom: 0,
+            bottom: 90,
             left: 0,
             right: 0,
             child: _buildInputBar(context),
@@ -259,15 +259,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ],
             ),
             actions: [
-              IconButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('خيارات إضافية')),
-                  );
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_horiz, color: Colors.black),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: Colors.white,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'clear':
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('مسح المحادثة'),
+                          content: const Text('هل تريد مسح جميع الرسائل؟'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                ref.read(chatMessagesProvider.notifier).clearHistory();
+                              },
+                              child: const Text('مسح', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+                      break;
+                    case 'refresh':
+                      ref.read(chatMessagesProvider.notifier).loadHistory();
+                      break;
+                    case 'tips':
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('💡 نصيحة: استخدم صورة واضحة بإضاءة جيدة لأفضل تحليل')),
+                      );
+                      break;
+                  }
                 },
-                icon: const Icon(Icons.more_horiz,
-                    color: Colors.black),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'clear', child: Row(children: [
+                    Icon(Icons.delete_outline, color: Colors.red),
+                    SizedBox(width: 12),
+                    Text('مسح المحادثة'),
+                  ])),
+                  const PopupMenuItem(value: 'refresh', child: Row(children: [
+                    Icon(Icons.refresh, color: Colors.black54),
+                    SizedBox(width: 12),
+                    Text('تحديث'),
+                  ])),
+                  const PopupMenuItem(value: 'tips', child: Row(children: [
+                    Icon(Icons.lightbulb_outline, color: Colors.amber),
+                    SizedBox(width: 12),
+                    Text('نصائح الاستخدام'),
+                  ])),
+                ],
               ),
             ],
           ),
@@ -278,7 +321,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildInputBar(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [

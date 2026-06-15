@@ -185,7 +185,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Widget _buildContent(List<ScanModel> scans) {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
       children: [
         _buildFilterPills(context),
         const SizedBox(height: 24),

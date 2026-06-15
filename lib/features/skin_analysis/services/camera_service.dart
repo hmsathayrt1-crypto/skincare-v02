@@ -90,13 +90,13 @@ class CameraService {
     }
   }
 
-  /// تبديل الفلاش (تلقائي ↔ مغلق)
+  /// تبديل الفلاش (تشغيل/إطفاء الفلاش)
   Future<void> toggleFlash() async {
     if (!isInitialized) return;
     try {
-      final newMode = currentFlashMode == FlashMode.auto
+      final newMode = currentFlashMode == FlashMode.torch
           ? FlashMode.off
-          : FlashMode.auto;
+          : FlashMode.torch;
       await _controller!.setFlashMode(newMode);
     } catch (e) {
       debugPrint('خطأ في تبديل الفلاش: $e');

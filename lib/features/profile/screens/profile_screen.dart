@@ -56,6 +56,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       case 'عادية':
         return SkinType.normal;
       case 'mixed':
+      case 'combination':
       case 'مختلطة':
         return SkinType.mixed;
       default:
@@ -72,9 +73,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       case SkinType.normal:
         return 'normal';
       case SkinType.mixed:
-        return 'mixed';
+        return 'combination';
       default:
-        return 'mixed';
+        return 'combination';
     }
   }
 
@@ -98,10 +99,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorStr = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل حفظ التغييرات: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text('فشل الحفظ: $errorStr'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'إعادة',
+              textColor: Colors.white,
+              onPressed: _saveProfile,
+            ),
           ),
         );
       }
@@ -138,6 +146,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(context),
+      drawer: _buildNavigationDrawer(context),
       body: Stack(
         children: [
           // 1. التوهج الخلفي
@@ -179,9 +188,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       centerTitle: true,
       leading: IconButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('القائمة الجانبية')),
-          );
+          Scaffold.of(context).openDrawer();
         },
         icon: const Icon(Icons.menu, color: Colors.black),
       ),
@@ -191,11 +198,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: IconButton(
             icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('الإعدادات')),
-              );
-            },
+            onPressed: () => _showSettingsDialog(context),
           ),
         ),
       ],
@@ -204,6 +207,143 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(color: Colors.transparent),
         ),
+      ),
+    );
+  }
+
+  /// قائمة جانبية تحتوي جميع الواجهات المتاحة
+  Widget _buildNavigationDrawer(BuildContext context) {
+    return Drawer(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, const Color(0xFFF5F0F0)],
+          ),
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // ترويسة القائمة
+            Container(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 20,
+                bottom: 20,
+                left: 20,
+                right: 20,
+              ),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [AppTheme.pinkGlow, AppTheme.greenGlow]),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.face_retouching_natural, size: 48, color: Colors.white),
+                  const SizedBox(height: 8),
+                  Text(
+                    ref.watch(authProvider).user?.fullName ?? 'المستخدم',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  Text(
+                    ref.watch(authProvider).user?.email ?? '',
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.8)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildDrawerItem(context, Icons.smart_toy_outlined, 'المحادثة الذكية', '/chat'),
+            _buildDrawerItem(context, Icons.center_focus_strong, 'فحص البشرة', '/camera'),
+            _buildDrawerItem(context, Icons.history, 'سجل النتائج', '/history'),
+            _buildDrawerItem(context, Icons.person_outline, 'الملف الشخصي', '/profile'),
+            const Divider(indent: 20, endIndent: 20),
+            _buildDrawerItem(context, Icons.lightbulb_outline, 'نصائح يومية', null, onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('💡 نصائح يومية - قريباً')),
+              );
+            }),
+            _buildDrawerItem(context, Icons.info_outline, 'حول التطبيق', null, onTap: () {
+              Navigator.pop(context);
+              showAboutDialog(
+                context: context,
+                applicationName: 'Dermalyze',
+                applicationVersion: '1.0.0',
+                applicationLegalese: 'نظام تحليل البشرة بالذكاء الاصطناعي',
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(BuildContext context, IconData icon, String title, String? route, {VoidCallback? onTap}) {
+    final currentRoute = GoRouterState.of(context).matchedLocation;
+    final isActive = route != null && currentRoute == route;
+    return ListTile(
+      leading: Icon(icon, color: isActive ? AppTheme.greenGlow : Colors.black54),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+          color: isActive ? AppTheme.greenGlow : Colors.black87,
+        ),
+      ),
+      trailing: isActive ? const Icon(Icons.check_circle, color: AppTheme.greenGlow, size: 20) : null,
+      onTap: onTap ?? () {
+        Navigator.pop(context); // إغلاق القائمة
+        if (route != null && !isActive) {
+          context.go(route);
+        }
+      },
+    );
+  }
+
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Row(
+          children: [
+            Icon(Icons.settings, color: Colors.black),
+            SizedBox(width: 12),
+            Text('الإعدادات'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.notifications_outlined),
+              title: const Text('الإشعارات'),
+              trailing: Switch(value: true, onChanged: (v) {}),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dark_mode_outlined),
+              title: const Text('الوضع الداكن'),
+              trailing: Switch(value: false, onChanged: (v) {}),
+            ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('اللغة'),
+              trailing: const Text('العربية'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.storage),
+              title: const Text('إدارة البيانات'),
+              trailing: const Icon(Icons.chevron_left),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إغلاق'),
+          ),
+        ],
       ),
     );
   }
