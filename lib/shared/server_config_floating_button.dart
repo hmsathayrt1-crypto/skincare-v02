@@ -205,7 +205,7 @@ class _ServerConfigDialogState extends State<ServerConfigDialog> {
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        if (data is Map && data['status'] == 'success') {
+        if (data is Map && (data['success'] == true || data['status'] == 'success')) {
           setState(() {
             _testResult = 'تم الاتصال بنجاح! الباك إند يعمل ✅';
             _testSuccess = true;

@@ -6,9 +6,11 @@
 ## 📝 سجل التغييرات
 | التاريخ | التغيير | الملفات المتأثرة |
 |---------|---------|------------------|
+| 2026-06-15 | تشغيل التطبيق بنجاح وتثبيته على الهاتف الأندرويد المتصل `R5CYA0MKBGW` | - |
 | 2026-06-15 | إنشاء ملف المساعدة `setup.bat` لتبسيط إعداد وتهيئة قاعدة البيانات تلقائياً دون الحاجة لخطوات يدوية في phpMyAdmin | `setup.bat` |
 | 2026-06-15 | إضافة زر إعدادات الخادم العائم (Server Connection Floating Button) وتخزين سجل العناوين السابقة واختبار الاتصال بالخلفية | `lib/main.dart`, `lib/core/router/app_router.dart`, `lib/core/constants/api_endpoints.dart`, `lib/shared/server_config_floating_button.dart` |
 | 2026-06-15 | استرجاع الثيم الفاتح (ThemeMode.light) لتجربة الألوان الفاتحة | `lib/main.dart` |
+| 2026-06-15 | تفعيل السماح بحركة مرور البيانات غير المشفرة (Cleartext HTTP) في الأندرويد، وتصحيح التحقق من استجابة اختبار الاتصال بالخادم | `android/app/src/main/AndroidManifest.xml`, `lib/shared/server_config_floating_button.dart` |
 | 2026-06-15 | تصحيح استيرادات الحزمة وبناء نسخة APK بنجاح | `lib/main.dart`, `lib/core/services/auth_service.dart`, `lib/core/services/chat_service.dart`, `lib/core/services/scan_service.dart` |
 | 2026-05-03 | إنشاء ملفات التوثيق Agent.md و UserReport.md | `Agent.md`, `UserReport.md` |
 | 2026-05-03 | إصلاح مشاكل الواجهات والربط عبر استخدام `go_router` بدلًا من `Navigator` | `welcome_screen.dart`, `login_screen.dart`, `register_screen.dart`, `camera_screen.dart`, `analysis_result_screen.dart` |
