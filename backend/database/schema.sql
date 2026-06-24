@@ -89,7 +89,27 @@ CREATE TABLE IF NOT EXISTS `skin_tips` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6) جدول روتين العناية للمستخدم
+-- 6.5) جدول "نصيحة اليوم" المولّدة بالذكاء الاصطناعي
+--      قيد UNIQUE(user_id, advice_date) يضمن نصيحة واحدة فقط لكل مستخدم في اليوم
+CREATE TABLE IF NOT EXISTS `daily_advice` (
+  `id`                  INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id`             INT  NOT NULL,
+  `advice_date`         DATE NOT NULL,
+  `advice_text`         TEXT NOT NULL,
+  `skin_type`           VARCHAR(50)  NULL,
+  `temperature`         DOUBLE       NULL,
+  `humidity`            DOUBLE       NULL,
+  `weather_description` VARCHAR(190) NULL,
+  `city_name`           VARCHAR(100) NULL,
+  `latitude`            DOUBLE       NULL,
+  `longitude`           DOUBLE       NULL,
+  `elevation`           DOUBLE       NULL,
+  `created_at`          DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uniq_user_day` (`user_id`, `advice_date`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7) جدول روتين العناية للمستخدم
 CREATE TABLE IF NOT EXISTS `user_routines` (
   `id`           INT AUTO_INCREMENT PRIMARY KEY,
   `user_id`      INT NOT NULL,

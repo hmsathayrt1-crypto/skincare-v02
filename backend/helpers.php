@@ -5,6 +5,11 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 
+/* ---------- إعدادات نموذج "نصيحة اليوم" (غير سرّية — قابلة للتجاوز من config.php) ---------- */
+if (!defined('DAILY_TIP_MODEL'))      define('DAILY_TIP_MODEL', 'gemini-2.5-flash');
+if (!defined('DAILY_TIP_REASONING'))  define('DAILY_TIP_REASONING', 'none'); // none|low|medium|high
+if (!defined('DAILY_TIP_MAX_TOKENS')) define('DAILY_TIP_MAX_TOKENS', 300);
+
 /* ---------- CORS + ترويسات أساسية ---------- */
 function send_headers(): void
 {
@@ -111,6 +116,184 @@ function fetch_weather(?float $lat, ?float $lon): array
     $out['description'] = $data['weather'][0]['description'] ?? null;
     // مؤشر UV يتطلب One Call API (قد يكون مدفوعاً) — نتركه null هنا.
     return $out;
+}
+
+/* =====================================================================
+ *  بدائل مجانية بدون مفتاح API عبر Open-Meteo + BigDataCloud
+ *  تُستخدم لتوليد "نصيحة اليوم": الطقس + الارتفاع عن سطح البحر + المدينة.
+ * ===================================================================== */
+
+/** تحويل رمز طقس WMO إلى وصف عربي مختصر */
+function wmo_to_arabic(?int $code): ?string
+{
+    if ($code === null) {
+        return null;
+    }
+    $map = [
+        0 => 'صافٍ',
+        1 => 'صافٍ غالباً', 2 => 'غائم جزئياً', 3 => 'غائم',
+        45 => 'ضباب', 48 => 'ضباب متجمد',
+        51 => 'رذاذ خفيف', 53 => 'رذاذ', 55 => 'رذاذ كثيف',
+        61 => 'مطر خفيف', 63 => 'مطر', 65 => 'مطر غزير',
+        71 => 'ثلج خفيف', 73 => 'ثلج', 75 => 'ثلج كثيف',
+        80 => 'زخات مطر خفيفة', 81 => 'زخات مطر', 82 => 'زخات مطر غزيرة',
+        95 => 'عاصفة رعدية', 96 => 'عاصفة رعدية مع برَد', 99 => 'عاصفة رعدية شديدة',
+    ];
+    return $map[$code] ?? 'غير محدد';
+}
+
+/**
+ * طقس حالي من Open-Meteo (بدون مفتاح).
+ * يرجع: [temperature, humidity, uv_index, description]
+ */
+function fetch_weather_openmeteo(?float $lat, ?float $lon): array
+{
+    $out = ['temperature' => null, 'humidity' => null, 'uv_index' => null, 'description' => null];
+    if ($lat === null || $lon === null) {
+        return $out;
+    }
+    $url = 'https://api.open-meteo.com/v1/forecast?' . http_build_query([
+        'latitude'  => $lat,
+        'longitude' => $lon,
+        'current'   => 'temperature_2m,relative_humidity_2m,weather_code',
+    ]);
+    $res = http_get($url);
+    if ($res === null) {
+        return $out;
+    }
+    $data = json_decode($res, true);
+    $cur  = $data['current'] ?? null;
+    if (!is_array($cur)) {
+        return $out;
+    }
+    $out['temperature'] = isset($cur['temperature_2m']) ? (float)$cur['temperature_2m'] : null;
+    $out['humidity']    = isset($cur['relative_humidity_2m']) ? (float)$cur['relative_humidity_2m'] : null;
+    $out['description'] = wmo_to_arabic(isset($cur['weather_code']) ? (int)$cur['weather_code'] : null);
+    return $out;
+}
+
+/** الارتفاع عن سطح البحر (متر) من Open-Meteo Elevation (بدون مفتاح) */
+function fetch_elevation(?float $lat, ?float $lon): ?float
+{
+    if ($lat === null || $lon === null) {
+        return null;
+    }
+    $url = 'https://api.open-meteo.com/v1/elevation?' . http_build_query([
+        'latitude'  => $lat,
+        'longitude' => $lon,
+    ]);
+    $res = http_get($url);
+    if ($res === null) {
+        return null;
+    }
+    $data = json_decode($res, true);
+    if (isset($data['elevation'][0]) && is_numeric($data['elevation'][0])) {
+        return (float)$data['elevation'][0];
+    }
+    if (isset($data['elevation']) && is_numeric($data['elevation'])) {
+        return (float)$data['elevation'];
+    }
+    return null;
+}
+
+/** اسم المدينة بالعربية من الإحداثيات عبر BigDataCloud (بدون مفتاح) */
+function reverse_city(?float $lat, ?float $lon): ?string
+{
+    if ($lat === null || $lon === null) {
+        return null;
+    }
+    $url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?' . http_build_query([
+        'latitude'        => $lat,
+        'longitude'       => $lon,
+        'localityLanguage'=> 'ar',
+    ]);
+    $res = http_get($url);
+    if ($res === null) {
+        return null;
+    }
+    $data = json_decode($res, true);
+    if (!is_array($data)) {
+        return null;
+    }
+    $city    = $data['city'] ?: ($data['locality'] ?? null);
+    $country = $data['countryName'] ?? null;
+    if (!$city) {
+        return $country ?: null;
+    }
+    return $country ? "{$city}، {$country}" : $city;
+}
+
+/**
+ * يبني وصفاً نصياً للموقع يربط الارتفاع بتأثيره على البشرة
+ * (قرب البحر / مرتفع) لتمريره لنموذج النصيحة.
+ */
+function describe_location(?string $city, ?float $elevation): string
+{
+    $parts = [];
+    if ($city) {
+        $parts[] = $city;
+    }
+    if ($elevation !== null) {
+        $m = round($elevation);
+        if ($elevation < 50) {
+            $parts[] = "قريب من مستوى سطح البحر (ارتفاع {$m}م)، غالباً منطقة ساحلية رطبة";
+        } elseif ($elevation < 800) {
+            $parts[] = "ارتفاع معتدل عن سطح البحر ({$m}م)";
+        } else {
+            $parts[] = "مرتفع عن سطح البحر ({$m}م)، هواء أجفّ وأشعة شمس أقوى";
+        }
+    }
+    return empty($parts) ? 'غير متوفر' : implode(' — ', $parts);
+}
+
+/**
+ * يولّد "نصيحة اليوم" عبر نموذج رخيص/سريع (DAILY_TIP_MODEL) مع إطفاء التفكير.
+ * المعطيات نصية جاهزة: نوع البشرة + الطقس + الموقع.
+ */
+function generate_daily_advice(?string $skinType, string $weatherCtx, string $locationCtx): string
+{
+    if (!ai_key_configured()) {
+        // نصيحة احتياطية ثابتة عند غياب المفتاح — لا ننهار.
+        return 'نظّف بشرتك بغسول لطيف صباحاً ومساءً، وطبّق مرطباً مناسباً وواقي شمس واسع الطيف نهاراً.';
+    }
+
+    $skin = $skinType ?: 'غير محدد';
+
+    $systemPrompt = <<<TXT
+أنت مستشار طبي متخصص في طب الجلدية. مهمتك تقديم توصية يومية مقتضبة، رسمية، ومباشرة بناءً على المعطيات المحددة.
+الشروط:
+1. الإيجاز الصارم: ألا تتجاوز التوصية سطراً واحداً إلى سطرين كحد أقصى.
+2. الأسلوب: رسمي، مهني، وطبي جاف (تجنّب العبارات الودية أو التسويقية).
+3. المضمون: اربط نوع البشرة بالطقس والموقع الحالي مباشرة، وحدّد الإجراء أو المادة الفعّالة المطلوبة (مثل: حمض الهيالورونيك، واقي شمس فيزيائي) دون ذكر علامات تجارية.
+4. البداية: ابدأ بالتوصية مباشرة دون أي مقدمات أو ترحيب أو صياغات إنشائية، ولا تكرّر المعطيات، ولا تذكر أنك ذكاء اصطناعي.
+TXT;
+
+    $userPrompt = "نوع البشرة: {$skin}\nالطقس: {$weatherCtx}\nالموقع: {$locationCtx}\n\nأصدر التوصية الطبية المناسبة باختصار شديد.";
+
+    $payload = [
+        'model'    => DAILY_TIP_MODEL,
+        'messages' => [
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user',   'content' => $userPrompt],
+        ],
+        'temperature'     => 0.7,
+        'max_tokens'      => DAILY_TIP_MAX_TOKENS,
+        // إطفاء "التفكير" على البوابة: يخفض استهلاك التوكنات ~6× ويسرّع الرد.
+        'reasoning_effort'=> DAILY_TIP_REASONING,
+    ];
+
+    $res = http_post_json(GEMINI_ENDPOINT, $payload, ai_auth_headers());
+    if ($res === null) {
+        return 'تعذّر توليد نصيحة اليوم حالياً. حافظ على ترطيب بشرتك واستخدام واقي الشمس.';
+    }
+
+    $body = json_decode($res, true);
+    if (isset($body['error'])) {
+        return 'تعذّر توليد نصيحة اليوم حالياً. حافظ على ترطيب بشرتك واستخدام واقي الشمس.';
+    }
+
+    $text = trim($body['choices'][0]['message']['content'] ?? '');
+    return $text !== '' ? $text : 'حافظ على روتين عناية بسيط: تنظيف لطيف، ترطيب مناسب، وواقي شمس نهاري.';
 }
 
 /* =====================================================================

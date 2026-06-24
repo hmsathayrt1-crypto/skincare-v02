@@ -23,6 +23,7 @@ class ApiEndpoints {
   // === أخرى ===
   static const String tips = '/tips.php';
   static const String dashboard = '/dashboard.php';
+  static const String dailyAdvice = '/daily_advice.php';
 
   /// يعيد الرابط الكامل
   static String fullUrl(String endpoint) => '$baseUrl$endpoint';

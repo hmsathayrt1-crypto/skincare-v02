@@ -157,6 +157,29 @@ try {
     ");
     done();
 
+    // --- daily_advice (نصيحة اليوم المولّدة بالذكاء الاصطناعي) ---
+    step("إنشاء جدول daily_advice...");
+    $pdo->exec("
+        CREATE TABLE `daily_advice` (
+            `id`                  INT  AUTO_INCREMENT PRIMARY KEY,
+            `user_id`             INT  NOT NULL,
+            `advice_date`         DATE NOT NULL,
+            `advice_text`         TEXT NOT NULL,
+            `skin_type`           VARCHAR(50)  NULL,
+            `temperature`         DOUBLE       NULL,
+            `humidity`            DOUBLE       NULL,
+            `weather_description` VARCHAR(190) NULL,
+            `city_name`           VARCHAR(100) NULL,
+            `latitude`            DOUBLE       NULL,
+            `longitude`           DOUBLE       NULL,
+            `elevation`           DOUBLE       NULL,
+            `created_at`          DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `uniq_user_day` (`user_id`, `advice_date`),
+            FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    done();
+
     // ==============================
     //  4) بيانات أولية (Seed Data)
     // ==============================
@@ -281,7 +304,7 @@ try {
     echo "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse; width:100%;'>";
     echo "<tr style='background:#f0f0f0;'><th>الجدول</th><th>عدد السجلات</th></tr>";
 
-    $tables = ['users', 'api_tokens', 'scans', 'chat_messages', 'skin_tips', 'user_routines'];
+    $tables = ['users', 'api_tokens', 'scans', 'chat_messages', 'skin_tips', 'daily_advice', 'user_routines'];
     foreach ($tables as $t) {
         $count = $pdo->query("SELECT COUNT(*) FROM `{$t}`")->fetchColumn();
         echo "<tr><td>{$t}</td><td>{$count}</td></tr>";

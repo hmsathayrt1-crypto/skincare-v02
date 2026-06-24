@@ -31,10 +31,11 @@ class MainLayout extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(context, 0, Icons.smart_toy_outlined, "المحادثة الذكية"),
-              _buildNavItem(context, 1, Icons.center_focus_strong, "الفحص"),
-              _buildNavItem(context, 2, Icons.history, "السجل"),
-              _buildNavItem(context, 3, Icons.person_outline, "الملف الشخصي"),
+              _buildNavItem(context, 0, Icons.home_outlined, "الرئيسية"),
+              _buildNavItem(context, 1, Icons.smart_toy_outlined, "المحادثة"),
+              _buildNavItem(context, 2, Icons.center_focus_strong, "الفحص"),
+              _buildNavItem(context, 3, Icons.history, "السجل"),
+              _buildNavItem(context, 4, Icons.person_outline, "الملف"),
             ],
           ),
         ),

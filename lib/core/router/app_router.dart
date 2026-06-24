@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../shared/main_layout.dart';
+import '../../features/home/screens/home_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
@@ -71,7 +72,17 @@ final GoRouter appRouter = GoRouter(
         return MainLayout(navigationShell: navigationShell);
       },
       branches: [
-        // الفرع 0: المحادثة الذكية
+        // الفرع 0: الشاشة الرئيسية (تظهر فور تسجيل الدخول)
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/home',
+              name: 'home',
+              builder: (context, state) => const HomeScreen(),
+            ),
+          ],
+        ),
+        // الفرع 1: المحادثة الذكية
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -81,7 +92,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // الفرع 1: الفحص بالكاميرا
+        // الفرع 2: الفحص بالكاميرا
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -91,7 +102,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // الفرع 2: سجل النتائج
+        // الفرع 3: سجل النتائج
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -101,7 +112,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // الفرع 3: الملف الشخصي
+        // الفرع 4: الملف الشخصي
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -112,12 +123,6 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
       ],
-    ),
-    // ===== مسار الصفحة الرئيسية (للتوجيه بعد تسجيل الدخول) =====
-    GoRoute(
-      path: '/home',
-      name: 'home',
-      redirect: (context, state) => '/chat',
     ),
   ],
   errorBuilder: (context, state) => Scaffold(
